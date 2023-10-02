@@ -16,23 +16,45 @@ const btnHold=document.querySelector('.btn--hold')
 const btnNewGame=document.querySelector('.btn--new')
 const scoreEl0=document.getElementById('score--0')
 const scoreEl1=document.getElementById('score--1')
-// const score1Element=document.getElementById('score--1')
-const nameOf0Player=prompt("What is first palyer's name?")
-const nameOf1Player=prompt("What is Second Player's name")
 
+const btnSubmitPly=document.getElementById('start')
+document.querySelector('.playersinput').classList.remove('hidden')
+// const score1Element=document.getElementById('score--1')
+// const nameOf0Player=prompt("What is first palyer's name?")
+// const nameOf1Player=prompt("What is Second Player's name")
+ let nameOf1Player
+ let nameOf0Player
 let currentScore=[0,0]
 let score=[0,0]
 let winner
 let playing=true
+let players=[nameOf0Player,nameOf1Player]
 
-player0Name.textContent=nameOf0Player
-player1Name.textContent=nameOf1Player
+btnSubmitPly.addEventListener('click', function(){
+    
+    nameOf0Player=document.getElementById('plyname--0').value
+    nameOf1Player=document.getElementById('plyname--1').value
+    if(nameOf0Player===""|| nameOf1Player===""){
+        document.querySelector('.plyMessage').textContent="Please input names";
+    }else{
+    document.querySelector('.playersinput').classList.add('hidden')
+    document.querySelector('.gameInterface').classList.remove('hidden')
+
+    player0Name.textContent=nameOf0Player
+    player1Name.textContent=nameOf1Player
+    players=[nameOf0Player,nameOf1Player]
+
+}})
+
+//checking the winner
+//adding event listener to roll dice event
+// document.getElementById('btnclose').addEventListener('click', function(){
+//     console.log('buttonn');
+//     document.querySelector('.playersinput').classList.add('hidden')
+// })
 scoreEl0.textContent=score[0]
 scoreEl1.textContent=score[1]
 
-let players=[nameOf0Player,nameOf1Player]
-//checking the winner
-//adding event listener to roll dice event
 
 if(playing){
     
@@ -55,7 +77,7 @@ btnRollDice.addEventListener('click', function(){
     else{
         //switch to player 2
         currentScore[currentPlayer]=0
-        document.getElementById(`current--${currentPlayer}`).textContent=currentScore[currentPlayer]
+        document.getElementById(`current--${currentPlayer}`).textContent=`Failed! You rolled 1`
         document.querySelector(`.player--${currentPlayer}`).classList.remove('player--active')
         currentPlayer=currentPlayer===0?1:0
         document.querySelector(`.player--${currentPlayer}`).classList.toggle('player--active')
@@ -85,10 +107,11 @@ document.getElementById(`current--${currentPlayer}`).textContent=currentScore[cu
 
 document.querySelector(`.player--${currentPlayer}`).classList.remove('player--active')
 
-if(score[currentPlayer]>=300){
+if(score[currentPlayer]>=10){
     //console.log(`${score[currentPlayer]}>=20`);
     playing=false
     winner=players[currentPlayer]
+    console.log(winner)
     message.classList.remove('hidden')
     message.textContent=`⚠⚠⚠ Game over!!${winner} is the winner`
     btnRollDice.setAttribute('disabled', '')

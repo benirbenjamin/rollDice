@@ -8,7 +8,8 @@
     <title>Pig Game</title>
   </head>
   <body>
-    <main>
+      <main class="gameInterface hidden">
+
       <section class="player player--0 player--active">
         <h2 class="name" id="name--0">Player 1</h2>
         <p class="score" id="score--0">43</p>
@@ -31,7 +32,20 @@
       <button class="btn btn--new">🔄 New game</button>
       <button class="btn btn--roll">🎲 Roll dice</button>
       <button class="btn btn--hold">📥 Hold</button>
+   
     </main>
+    <div class="playersinput hidden">
+
+      <!-- <span class="close" id="btnclose">&times;</span> -->
+      <h2 class="plyMessage">Players input</h2>
+      <form>
+        <label for="lblPlayer" class="lblPlayer">Player 1</label>
+        <input type="text" class="inptplayer" id="plyname--0" placeholder="First Player's name"><br>
+        <label for="lblplayer" class="lblPlayer">Player 2</label>
+        <input type="text" class="inptplayer" id="plyname--1" placeholder="Second Player's name"><br>
+        <label class="submit" id="start">Start</label>
+      </form>
+    </div>
     <script src="script.js"></script>
   </body>
 </html>
