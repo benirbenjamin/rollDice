@@ -107,7 +107,7 @@ document.getElementById(`current--${currentPlayer}`).textContent=currentScore[cu
 
 document.querySelector(`.player--${currentPlayer}`).classList.remove('player--active')
 
-if(score[currentPlayer]>=10){
+if(score[currentPlayer]>=300){
     //console.log(`${score[currentPlayer]}>=20`);
     playing=false
     winner=players[currentPlayer]
