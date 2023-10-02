@@ -41,6 +41,9 @@ main {
   display: none;
 }
 
+plyMessage{
+  text-align: center;
+}
 .playersinput h2{
  
   position: relative;
@@ -54,7 +57,7 @@ main {
 .playersinput{
 
   width: 400px;
-  height: 300px;
+  height: 430px;
   padding: 30px;
   position:absolute;
   box-shadow: 2px 2px 3px black;
@@ -166,6 +169,7 @@ main {
   border-radius: 9px;
   color: #fff;
   width: 65%;
+  min-width: fit-content;
   padding: 2rem;
   text-align: center;
   transition: all 0.75s;
