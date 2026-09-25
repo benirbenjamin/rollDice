@@ -227,20 +227,20 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
   const isMyTurn = activeRoom?.status === 'ACTIVE' && activeRoom?.current_turn === myTurnIndex;
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-3 sm:space-y-6">
       
       {/* Lobby / Room Creation View */}
       {!activeRoom ? (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           
           {/* Create Room Card */}
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-5 sm:p-8 shadow-2xl backdrop-blur-xl">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 glow-cyan">
                 <Users className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-white">PvP Multiplayer Rooms</h2>
+                <h2 className="text-lg sm:text-xl font-extrabold text-white">PvP Multiplayer Rooms</h2>
                 <p className="text-xs text-slate-400">Play live head-to-head against real online opponents</p>
               </div>
             </div>
@@ -262,10 +262,10 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
               </div>
             )}
 
-            <div className="mt-6 flex flex-col md:flex-row items-center gap-4 border-t border-slate-800 pt-5">
+            <div className="mt-5 flex flex-col md:flex-row items-center gap-4 border-t border-slate-800 pt-4">
               <div className="flex-1 w-full">
                 <label className="block text-xs font-semibold text-slate-300 mb-2">Select Room Stake (RWF)</label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                   {stakes.map((val) => (
                     <button
                       key={val}
@@ -274,7 +274,7 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
                         soundManager.playClick();
                         setStake(val);
                       }}
-                      className={`rounded-xl border py-2.5 text-xs font-extrabold transition ${
+                      className={`rounded-xl border py-2 text-[11px] sm:text-xs font-extrabold transition ${
                         stake === val
                           ? 'border-cyan-400 bg-cyan-500/20 text-cyan-300 glow-cyan scale-105'
                           : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
@@ -288,7 +288,7 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
 
               <button
                 onClick={handleCreateRoom}
-                className="w-full md:w-auto flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-cyan-600 px-6 py-3.5 text-sm font-extrabold text-slate-950 shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-cyan-500 transition"
+                className="w-full md:w-auto flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-cyan-600 px-6 py-3 text-xs sm:text-sm font-extrabold text-slate-950 shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-cyan-500 transition"
               >
                 <Plus className="h-4 w-4" />
                 Create Room
@@ -297,14 +297,14 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
           </div>
 
           {/* Active Public Rooms List */}
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
-            <h3 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
               Live Online Wager Rooms
             </h3>
 
             {rooms.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-800 p-8 text-center text-xs text-slate-500">
+              <div className="rounded-2xl border border-dashed border-slate-800 p-6 text-center text-xs text-slate-500">
                 No active rooms right now. Create one above to invite players!
               </div>
             ) : (
@@ -312,7 +312,7 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
                 {rooms.map((r) => (
                   <div
                     key={r.id}
-                    className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950 p-4 transition hover:border-slate-700"
+                    className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950 p-3 sm:p-4 transition hover:border-slate-700"
                   >
                     <div>
                       <div className="flex items-center gap-2">
@@ -328,10 +328,10 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
 
                     <button
                       onClick={() => handleJoinRoom(r.id)}
-                      className="flex items-center gap-1.5 rounded-xl bg-slate-800 hover:bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white transition"
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-800 hover:bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white transition"
                     >
                       <Play className="h-3.5 w-3.5 fill-white" />
-                      {r.player1_id === user?.id ? 'Enter Room' : 'Join Match'}
+                      {r.player1_id === user?.id ? 'Enter' : 'Join'}
                     </button>
                   </div>
                 ))}
@@ -341,15 +341,15 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
 
         </div>
       ) : (
-        /* Active PvP Room Arena */
-        <div className="mx-auto max-w-4xl space-y-6">
+        /* Active PvP Room Arena (Compact Mobile Fit) */
+        <div className="mx-auto max-w-4xl space-y-3 sm:space-y-6">
           
           {/* Header Bar */}
-          <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900 px-6 py-3 shadow-lg">
+          <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 sm:px-6 sm:py-3 shadow-lg">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-cyan-400" />
-              <span className="text-xs font-semibold text-slate-300">Room Code:</span>
-              <span className="font-mono text-xs font-bold text-cyan-300">{activeRoom.id}</span>
+              <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-cyan-400" />
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-300">Room:</span>
+              <span className="font-mono text-xs font-bold text-cyan-300">{activeRoom.id.substring(0, 8)}</span>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(activeRoom.id);
@@ -364,7 +364,7 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
 
             <button
               onClick={() => setActiveRoom(null)}
-              className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1 text-xs font-semibold text-slate-400 hover:text-white"
+              className="rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 text-[11px] font-semibold text-slate-400 hover:text-white"
             >
               Exit Arena
             </button>
@@ -372,91 +372,91 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
 
           {/* Waiting for Opponent Banner */}
           {activeRoom.status === 'WAITING' && (
-            <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-6 text-center shadow-lg">
-              <h3 className="text-base font-extrabold text-amber-300">Waiting for Opponent to Join...</h3>
-              <p className="mt-1 text-xs text-slate-300">
-                Share Room ID <span className="font-mono font-bold text-white">{activeRoom.id}</span> with a friend or wait for live players in the lobby!
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-center shadow-lg">
+              <h3 className="text-xs sm:text-sm font-extrabold text-amber-300">Waiting for Opponent to Join...</h3>
+              <p className="mt-0.5 text-[11px] text-slate-300">
+                Share Room ID <span className="font-mono font-bold text-white">{activeRoom.id}</span> with a friend!
               </p>
             </div>
           )}
 
-          {/* Player 1 vs Player 2 Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Player 1 vs Player 2 Cards (Compact 2-column on mobile) */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-4">
             
             {/* Player 1 */}
-            <div className={`relative overflow-hidden rounded-2xl border p-5 transition-all ${
+            <div className={`relative overflow-hidden rounded-xl sm:rounded-2xl border p-3 sm:p-5 transition-all ${
               activeRoom.current_turn === 0 && activeRoom.status === 'ACTIVE'
                 ? 'border-amber-400/80 bg-slate-900/90 shadow-xl shadow-amber-500/10'
                 : 'border-slate-800 bg-slate-950/60 opacity-80'
             }`}>
               {activeRoom.current_turn === 0 && activeRoom.status === 'ACTIVE' && (
-                <span className="absolute top-3 right-3 rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-black text-slate-950 animate-pulse">
-                  TURN PLAYER 1
+                <span className="absolute top-2 right-2 rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-black text-slate-950 animate-pulse">
+                  TURN P1
                 </span>
               )}
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300 font-bold">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300 font-bold text-xs">
                   P1
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-white">{activeRoom.player1_name || 'Player 1'}</h4>
-                  <p className="text-[11px] text-slate-400">{isPlayer1 ? '(You)' : 'Opponent'}</p>
+                <div className="truncate">
+                  <h4 className="text-xs sm:text-sm font-bold text-white truncate">{activeRoom.player1_name || 'Player 1'}</h4>
+                  <p className="text-[9px] text-slate-400">{isPlayer1 ? '(You)' : 'Opponent'}</p>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-baseline justify-between">
-                <span className="text-xs text-slate-400">Total Score:</span>
-                <span className="text-3xl font-black text-amber-400">{activeRoom.p1_score}</span>
+              <div className="mt-2 sm:mt-4 flex items-baseline justify-between">
+                <span className="text-[10px] sm:text-xs text-slate-400">Score:</span>
+                <span className="text-xl sm:text-3xl font-black text-amber-400">{activeRoom.p1_score}</span>
               </div>
             </div>
 
             {/* Player 2 */}
-            <div className={`relative overflow-hidden rounded-2xl border p-5 transition-all ${
+            <div className={`relative overflow-hidden rounded-xl sm:rounded-2xl border p-3 sm:p-5 transition-all ${
               activeRoom.current_turn === 1 && activeRoom.status === 'ACTIVE'
                 ? 'border-cyan-400/80 bg-slate-900/90 shadow-xl shadow-cyan-500/10'
                 : 'border-slate-800 bg-slate-950/60 opacity-80'
             }`}>
               {activeRoom.current_turn === 1 && activeRoom.status === 'ACTIVE' && (
-                <span className="absolute top-3 right-3 rounded-full bg-cyan-400 px-2.5 py-0.5 text-[10px] font-black text-slate-950 animate-pulse">
-                  TURN PLAYER 2
+                <span className="absolute top-2 right-2 rounded-full bg-cyan-400 px-2 py-0.5 text-[9px] font-black text-slate-950 animate-pulse">
+                  TURN P2
                 </span>
               )}
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-300 font-bold">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-300 font-bold text-xs">
                   P2
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-white">{activeRoom.player2_name || 'Waiting...'}</h4>
-                  <p className="text-[11px] text-slate-400">{isPlayer2 ? '(You)' : 'Opponent'}</p>
+                <div className="truncate">
+                  <h4 className="text-xs sm:text-sm font-bold text-white truncate">{activeRoom.player2_name || 'Waiting...'}</h4>
+                  <p className="text-[9px] text-slate-400">{isPlayer2 ? '(You)' : 'Opponent'}</p>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-baseline justify-between">
-                <span className="text-xs text-slate-400">Total Score:</span>
-                <span className="text-3xl font-black text-cyan-400">{activeRoom.p2_score}</span>
+              <div className="mt-2 sm:mt-4 flex items-baseline justify-between">
+                <span className="text-[10px] sm:text-xs text-slate-400">Score:</span>
+                <span className="text-xl sm:text-3xl font-black text-cyan-400">{activeRoom.p2_score}</span>
               </div>
             </div>
 
           </div>
 
           {/* Dice & Action Center */}
-          <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl backdrop-blur-xl">
+          <div className="flex flex-col items-center justify-center rounded-2xl sm:rounded-3xl border border-slate-800 bg-slate-900/80 p-4 sm:p-8 shadow-2xl backdrop-blur-xl">
             
-            <div className="text-center mb-2">
-              <span className="text-xs text-slate-400 uppercase tracking-widest font-bold">Current Turn Score</span>
-              <div className="text-4xl font-black text-emerald-400 mt-1">
+            <div className="text-center mb-1">
+              <span className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-widest font-bold">Current Turn Score</span>
+              <div className="text-3xl sm:text-4xl font-black text-emerald-400 mt-0.5">
                 +{activeRoom.current_accumulated || 0}
               </div>
             </div>
 
-            <Dice3D value={lastDice} isRolling={isRolling} size={110} />
+            <Dice3D value={lastDice} isRolling={isRolling} size={85} />
 
             {/* Action Buttons */}
-            <div className="mt-6 flex w-full max-w-sm gap-3">
+            <div className="mt-4 sm:mt-6 flex w-full max-w-sm gap-2 sm:gap-3">
               <button
                 onClick={handleRoll}
                 disabled={!isMyTurn || isRolling}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 py-3.5 text-sm font-extrabold text-slate-950 shadow-lg shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500 transition disabled:opacity-40"
+                className="flex flex-1 items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 py-3 sm:py-3.5 text-xs sm:text-sm font-extrabold text-slate-950 shadow-lg shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500 transition disabled:opacity-40"
               >
                 <Zap className="h-4 w-4" />
                 {isRolling ? 'Rolling...' : 'ROLL DICE'}
@@ -465,7 +465,7 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
               <button
                 onClick={handleHold}
                 disabled={!isMyTurn || isRolling || !activeRoom.current_accumulated}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-emerald-500 transition disabled:opacity-40"
+                className="flex flex-1 items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3 sm:py-3.5 text-xs sm:text-sm font-extrabold text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-emerald-500 transition disabled:opacity-40"
               >
                 <Award className="h-4 w-4" />
                 HOLD SCORE
