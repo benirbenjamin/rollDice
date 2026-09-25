@@ -13,7 +13,9 @@ interface PvEGameProps {
 }
 
 export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenDeposit }) => {
-  const [stake, setStake] = useState<number>(1000);
+  const [stake, setStake] = useState<number>(20);
+  const [customStakeInput, setCustomStakeInput] = useState<string>('20');
+  const [isCustomStake, setIsCustomStake] = useState<boolean>(false);
   const [targetScore, setTargetScore] = useState<number>(100);
   const [gameState, setGameState] = useState<any>(null);
   const [isRolling, setIsRolling] = useState(false);
@@ -27,7 +29,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
   const [floatingScore, setFloatingScore] = useState<number | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
 
-  const stakes = [500, 1000, 2500, 5000, 10000];
+  const stakes = [20, 50, 100, 200, 500, 1000];
   const targetOptions = [50, 100, 200];
 
   // Ref to prevent double AI turn triggers
@@ -158,8 +160,8 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
     setAiLogs([]);
     setShowGameOverModal(false);
 
-    if (!user) {
-      setError('Please login or play in Demo mode');
+    if (!stake || isNaN(stake) || stake < 20) {
+      setError('Minimum stake amount is RWF 20');
       return;
     }
 
@@ -520,9 +522,9 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
                 <span>Select Stake Amount (RWF)</span>
-                <span className="text-[10px] text-amber-400 font-bold">Wager Amount</span>
+                <span className="text-[10px] text-amber-400 font-bold">Min RWF 20</span>
               </label>
-              <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 {stakes.map((val) => (
                   <button
                     key={val}
@@ -530,9 +532,11 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
                     onClick={() => {
                       soundManager.playClick();
                       setStake(val);
+                      setCustomStakeInput(String(val));
+                      setIsCustomStake(false);
                     }}
-                    className={`rounded-xl border py-2.5 sm:py-3 text-[11px] sm:text-xs font-extrabold transition ${
-                      stake === val
+                    className={`rounded-xl border py-2.5 text-[11px] sm:text-xs font-extrabold transition ${
+                      stake === val && !isCustomStake
                         ? 'border-amber-400 bg-amber-500/20 text-amber-300 glow-gold scale-105 shadow-md shadow-amber-500/20'
                         : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
                     }`}
@@ -540,6 +544,38 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
                     RWF {val.toLocaleString()}
                   </button>
                 ))}
+              </div>
+
+              {/* Custom Stake Input Box */}
+              <div className="mt-3">
+                <div className="relative flex items-center">
+                  <span className="absolute left-3.5 text-xs font-black text-amber-400">RWF</span>
+                  <input
+                    type="number"
+                    min="20"
+                    max="100000"
+                    placeholder="Enter custom stake amount (min 20)..."
+                    value={customStakeInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCustomStakeInput(val);
+                      setIsCustomStake(true);
+                      const num = Number(val);
+                      if (!isNaN(num)) {
+                        setStake(num);
+                      }
+                    }}
+                    onFocus={() => setIsCustomStake(true)}
+                    className={`w-full rounded-xl border pl-14 pr-28 py-2.5 text-xs font-bold transition focus:outline-none ${
+                      isCustomStake
+                        ? 'border-amber-400 bg-slate-900 text-amber-300 ring-1 ring-amber-400/50 shadow-md shadow-amber-500/10'
+                        : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'
+                    }`}
+                  />
+                  <span className="absolute right-3 text-[10px] font-extrabold text-amber-400 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
+                    Custom Stake
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -583,8 +619,8 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
             </div>
           </div>
 
-          {/* Player vs AI Scores Cards (2-Column Grid on Mobile) */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+          {/* Player vs AI Scores Cards (1 Column on Mobile, 2 Columns on SM+) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             
             {/* Player Card */}
             <div className={`relative overflow-hidden rounded-xl sm:rounded-2xl border p-3 sm:p-5 transition-all duration-300 ${

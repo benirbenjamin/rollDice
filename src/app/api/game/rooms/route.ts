@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const settingsRows = await dbQuery(`SELECT key, value FROM system_settings`);
     const settingsMap = new Map(settingsRows.map((r) => [r.key, r.value]));
 
-    const minStake = Number(settingsMap.get('min_stake') || 500);
+    const minStake = Number(settingsMap.get('min_stake') || 20);
     const maxStake = Number(settingsMap.get('max_stake') || 100000);
     const targetScore = Number(settingsMap.get('target_score') || 100);
 

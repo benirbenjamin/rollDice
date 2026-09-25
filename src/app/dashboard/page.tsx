@@ -149,7 +149,7 @@ export default function DashboardPage() {
               </p>
 
               <div className="mt-6 flex items-center justify-between">
-                <span className="text-xs text-slate-400 font-bold">Stakes: RWF 500 - 10,000</span>
+                <span className="text-xs text-slate-400 font-bold">Stakes: From RWF 20 (Custom Allowed)</span>
                 <Link
                   href="/play?mode=pve"
                   onClick={() => soundManager.playClick()}

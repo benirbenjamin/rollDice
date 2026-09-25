@@ -92,20 +92,20 @@ function PlayArenaContent() {
           </button>
 
           {/* Mode Switcher Tabs */}
-          <div className="inline-flex rounded-xl border border-slate-800 bg-slate-950 p-1 shadow-inner">
+          <div className="flex w-full sm:w-auto rounded-xl border border-slate-800 bg-slate-950 p-1 shadow-inner">
             <button
               onClick={() => {
                 soundManager.playClick();
                 setActiveTab('PVE');
               }}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-extrabold transition ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-extrabold transition ${
                 activeTab === 'PVE'
                   ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Bot className="h-4 w-4" />
-              Single Player vs AI
+              <Bot className="h-4 w-4 shrink-0" />
+              <span>Single Player vs AI</span>
             </button>
 
             <button
@@ -113,14 +113,14 @@ function PlayArenaContent() {
                 soundManager.playClick();
                 setActiveTab('PVP');
               }}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-extrabold transition ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-extrabold transition ${
                 activeTab === 'PVP'
                   ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Users className="h-4 w-4" />
-              Multiplayer PvP Rooms
+              <Users className="h-4 w-4 shrink-0" />
+              <span>Multiplayer PvP Rooms</span>
             </button>
           </div>
 

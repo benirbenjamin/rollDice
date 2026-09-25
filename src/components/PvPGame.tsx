@@ -15,13 +15,15 @@ interface PvPGameProps {
 export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenDeposit }) => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [activeRoom, setActiveRoom] = useState<any>(null);
-  const [stake, setStake] = useState<number>(1000);
+  const [stake, setStake] = useState<number>(20);
+  const [customStakeInput, setCustomStakeInput] = useState<string>('20');
+  const [isCustomStake, setIsCustomStake] = useState<boolean>(false);
   const [isRolling, setIsRolling] = useState(false);
   const [lastDice, setLastDice] = useState<number>(6);
   const [error, setError] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
 
-  const stakes = [500, 1000, 2500, 5000, 10000];
+  const stakes = [20, 50, 100, 200, 500, 1000];
 
   // Fetch active public rooms
   const fetchRooms = async () => {
@@ -68,8 +70,8 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
     soundManager.playClick();
     setError(null);
 
-    if (!user) {
-      setError('Please login to create a wager room');
+    if (!stake || isNaN(stake) || stake < 20) {
+      setError('Minimum room stake amount is RWF 20');
       return;
     }
 
@@ -262,10 +264,13 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
               </div>
             )}
 
-            <div className="mt-5 flex flex-col md:flex-row items-center gap-4 border-t border-slate-800 pt-4">
-              <div className="flex-1 w-full">
-                <label className="block text-xs font-semibold text-slate-300 mb-2">Select Room Stake (RWF)</label>
-                <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+            <div className="mt-5 space-y-4 border-t border-slate-800 pt-4">
+              <div className="w-full">
+                <label className="block text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
+                  <span>Select Room Stake (RWF)</span>
+                  <span className="text-[10px] text-cyan-400 font-bold">Min RWF 20</span>
+                </label>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   {stakes.map((val) => (
                     <button
                       key={val}
@@ -273,10 +278,12 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
                       onClick={() => {
                         soundManager.playClick();
                         setStake(val);
+                        setCustomStakeInput(String(val));
+                        setIsCustomStake(false);
                       }}
                       className={`rounded-xl border py-2 text-[11px] sm:text-xs font-extrabold transition ${
-                        stake === val
-                          ? 'border-cyan-400 bg-cyan-500/20 text-cyan-300 glow-cyan scale-105'
+                        stake === val && !isCustomStake
+                          ? 'border-cyan-400 bg-cyan-500/20 text-cyan-300 glow-cyan scale-105 shadow-md shadow-cyan-500/20'
                           : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
                       }`}
                     >
@@ -284,14 +291,46 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
                     </button>
                   ))}
                 </div>
+
+                {/* Custom Stake Box */}
+                <div className="mt-3">
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3.5 text-xs font-black text-cyan-400">RWF</span>
+                    <input
+                      type="number"
+                      min="20"
+                      max="100000"
+                      placeholder="Enter custom room stake (min 20)..."
+                      value={customStakeInput}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomStakeInput(val);
+                        setIsCustomStake(true);
+                        const num = Number(val);
+                        if (!isNaN(num)) {
+                          setStake(num);
+                        }
+                      }}
+                      onFocus={() => setIsCustomStake(true)}
+                      className={`w-full rounded-xl border pl-14 pr-28 py-2.5 text-xs font-bold transition focus:outline-none ${
+                        isCustomStake
+                          ? 'border-cyan-400 bg-slate-900 text-cyan-300 ring-1 ring-cyan-400/50 shadow-md shadow-cyan-500/10'
+                          : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'
+                      }`}
+                    />
+                    <span className="absolute right-3 text-[10px] font-extrabold text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-lg border border-cyan-500/20">
+                      Custom Stake
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <button
                 onClick={handleCreateRoom}
-                className="w-full md:w-auto flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-cyan-600 px-6 py-3 text-xs sm:text-sm font-extrabold text-slate-950 shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-cyan-500 transition"
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-cyan-600 px-6 py-3.5 text-xs sm:text-sm font-extrabold text-slate-950 shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-cyan-500 transition"
               >
                 <Plus className="h-4 w-4" />
-                Create Room
+                Create Wager Room (RWF {stake.toLocaleString()})
               </button>
             </div>
           </div>
@@ -380,8 +419,8 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
             </div>
           )}
 
-          {/* Player 1 vs Player 2 Cards (Compact 2-column on mobile) */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+          {/* Player 1 vs Player 2 Cards (1 Column on Mobile, 2 Columns on SM+) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             
             {/* Player 1 */}
             <div className={`relative overflow-hidden rounded-xl sm:rounded-2xl border p-3 sm:p-5 transition-all ${
