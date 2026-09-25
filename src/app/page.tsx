@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { DepositModal } from '@/components/DepositModal';
@@ -9,7 +8,7 @@ import { WithdrawModal } from '@/components/WithdrawModal';
 import { PvEGame } from '@/components/PvEGame';
 import { PvPGame } from '@/components/PvPGame';
 import { soundManager } from '@/lib/sound';
-import { Bot, Users, Trophy, ShieldCheck, Zap, HelpCircle, ArrowRight, PlayCircle, Sparkles } from 'lucide-react';
+import { Bot, Users, ShieldCheck, HelpCircle, ArrowRight, PlayCircle, Sparkles, Flame } from 'lucide-react';
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
@@ -106,10 +105,11 @@ export default function Home() {
         onLogout={handleLogout}
       />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 space-y-8">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 space-y-6">
         
-        {/* Demo Mode Announcement Pill */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900 to-amber-500/10 p-4 shadow-lg">
+        {/* Mode Selector & Quick Action Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-4 shadow-xl">
+          
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
               <Sparkles className="h-5 w-5 animate-pulse" />
@@ -117,95 +117,55 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-2">
                 <h4 className="text-sm font-black text-white">
-                  {isDemoMode ? '🎮 Practice Demo Mode Active' : '💰 Real Money Wagering Active'}
+                  {isDemoMode ? '🎮 Practice Demo Mode' : '💰 Real Money Wagering'}
                 </h4>
                 {isDemoMode && (
                   <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black text-emerald-400 border border-emerald-500/30">
-                    FREE RWF 10,000 DEMO CREDITS
+                    FREE RWF 10,000 CREDITS
                   </span>
                 )}
               </div>
               <p className="text-xs text-slate-400">
                 {isDemoMode
-                  ? 'Play risk-free with 10,000 free demo credits. Test roll animations & sounds!'
+                  ? 'Play risk-free with 10,000 demo credits. 3D Dice physics & sounds active!'
                   : 'Playing for real money payouts via instant Flutterwave mobile money & bank transfer.'}
               </p>
             </div>
           </div>
 
-          <button
-            onClick={handleToggleDemo}
-            className={`shrink-0 flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black transition shadow-md ${
-              isDemoMode
-                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-500/20 hover:from-emerald-400 hover:to-emerald-500'
-                : 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500'
-            }`}
-          >
-            <PlayCircle className="h-4 w-4" />
-            {isDemoMode ? 'Switch to Real Money Mode' : 'Try Free Demo Mode'}
-          </button>
-        </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                soundManager.playClick();
+                setRulesOpen(!rulesOpen);
+              }}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-xs font-bold text-slate-300 hover:border-slate-700 transition"
+            >
+              <HelpCircle className="h-4 w-4 text-amber-400" />
+              <span>Rules</span>
+            </button>
 
-        {/* Hero Banner with Custom Logo */}
-        <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 sm:p-10 shadow-2xl">
-          
-          {/* Ambient Glows */}
-          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="pointer-events-none absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
+            <button
+              onClick={handleToggleDemo}
+              className={`shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition shadow-md ${
+                isDemoMode
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-500/20 hover:from-emerald-400 hover:to-emerald-500'
+                  : 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500'
+              }`}
+            >
+              <PlayCircle className="h-4 w-4" />
+              {isDemoMode ? 'Real Money Mode' : 'Free Demo Mode'}
+            </button>
 
-          <div className="relative flex flex-col md:flex-row items-center justify-between gap-8">
-            
-            <div className="max-w-xl space-y-4 text-center md:text-left">
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1 text-xs font-bold text-amber-300">
-                <Zap className="h-3.5 w-3.5" />
-                <span>Real-Money Wagering & Free Demo</span>
-              </div>
-
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                Roll the Dice. Stake your Claim. <span className="text-gold-gradient">Win Real Cash!</span>
-              </h1>
-
-              <p className="text-sm text-slate-400 leading-relaxed">
-                Experience high-stakes Pig Dice wagering with automated Flutterwave instant deposits & payouts and provably fair RNG.
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
-                <button
-                  onClick={() => {
-                    soundManager.playClick();
-                    setRulesOpen(!rulesOpen);
-                  }}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-xs font-bold text-slate-300 hover:border-slate-700 transition"
-                >
-                  <HelpCircle className="h-4 w-4 text-amber-400" />
-                  How to Play Rules
-                </button>
-
-                {!user || user.isDemo ? (
-                  <Link
-                    href="/login"
-                    className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-xs font-extrabold text-slate-950 shadow-lg shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500 transition"
-                  >
-                    <span>Register / Login</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                ) : null}
-              </div>
-            </div>
-
-            {/* Custom Brand Logo Artwork */}
-            <div className="relative shrink-0 flex items-center justify-center">
-              <div className="relative h-44 w-44 sm:h-52 sm:w-52 overflow-hidden rounded-3xl border-2 border-amber-500/30 bg-slate-900 shadow-2xl glow-gold">
-                <Image
-                  src="/logo.png"
-                  alt="RollDice Custom Logo"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-            </div>
-
+            {(!user || user.isDemo) && (
+              <Link
+                href="/login"
+                className="hidden md:flex items-center gap-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 px-3.5 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/20 transition"
+              >
+                <span>Login</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            )}
           </div>
         </div>
 
@@ -241,9 +201,9 @@ export default function Home() {
                 soundManager.playClick();
                 setActiveTab('PVE');
               }}
-              className={`flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-extrabold transition ${
+              className={`flex items-center gap-2 rounded-xl px-6 py-3 text-xs font-extrabold transition ${
                 activeTab === 'PVE'
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -256,9 +216,9 @@ export default function Home() {
                 soundManager.playClick();
                 setActiveTab('PVP');
               }}
-              className={`flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-extrabold transition ${
+              className={`flex items-center gap-2 rounded-xl px-6 py-3 text-xs font-extrabold transition ${
                 activeTab === 'PVP'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                  ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 shadow-md shadow-cyan-500/20'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -268,8 +228,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Active Mode Arena */}
-        <div className="pt-2">
+        {/* Active Game Arena */}
+        <div className="pt-1">
           {activeTab === 'PVE' ? (
             <PvEGame
               user={user}

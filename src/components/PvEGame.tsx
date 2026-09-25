@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { Dice3D } from './Dice3D';
 import { soundManager } from '@/lib/sound';
@@ -27,18 +27,22 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
 
   const stakes = [500, 1000, 2500, 5000, 10000];
 
-  // Auto-play AI Turn whenever turn switches to AI (currentTurn === 1)
-  useEffect(() => {
-    if (!gameState || gameState.status !== 'ACTIVE' || gameState.currentTurn !== 1 || isAiThinking) return;
+  // Ref to prevent double AI turn triggers
+  const aiExecutingRef = useRef(false);
 
+  // Execute AI Bot Turn cleanly
+  const executeAiTurn = async (roomId: string, isDemoUser: boolean) => {
+    if (aiExecutingRef.current) return;
+    aiExecutingRef.current = true;
     setIsAiThinking(true);
-    const timer = setTimeout(async () => {
+
+    setTimeout(async () => {
       try {
-        if (user?.isDemo) {
-          // Demo Mode AI Simulation
-          let aiScore = gameState.p2Score || 0;
+        if (isDemoUser) {
+          // Local Demo AI Simulation
+          let aiScore = gameState?.p2Score || 0;
           let aiAccumulated = 0;
-          const targetScore = gameState.targetScore || 100;
+          const targetScore = gameState?.targetScore || 100;
           const logs: any[] = [];
           let aiBusted = false;
 
@@ -72,6 +76,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               status: 'COMPLETED',
               winner: 'AI_BOT',
               currentTurn: 0,
+              currentAccumulated: 0,
             }));
           } else {
             soundManager.playHoldScore();
@@ -87,42 +92,53 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
           const res = await fetch('/api/game/pve/ai-turn', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ roomId: gameState.id }),
+            body: JSON.stringify({ roomId }),
           });
 
           const data = await res.json();
 
-          if (res.ok) {
-            if (data.aiLogs) setAiLogs(data.aiLogs);
+          if (data.aiLogs) setAiLogs(data.aiLogs);
 
-            if (data.winner === 'AI_BOT') {
-              soundManager.playBustOne();
-              setGameState((prev: any) => ({
-                ...prev,
-                p2Score: data.p2Score,
-                status: 'COMPLETED',
-                winner: 'AI_BOT',
-                currentTurn: 0,
-              }));
-            } else {
-              soundManager.playHoldScore();
-              setGameState((prev: any) => ({
-                ...prev,
-                p2Score: data.p2Score,
-                currentTurn: 0,
-                currentAccumulated: 0,
-              }));
-            }
+          if (data.winner === 'AI_BOT') {
+            soundManager.playBustOne();
+            setGameState((prev: any) => ({
+              ...prev,
+              p2Score: data.p2Score,
+              status: 'COMPLETED',
+              winner: 'AI_BOT',
+              currentTurn: 0,
+              currentAccumulated: 0,
+            }));
+          } else {
+            soundManager.playHoldScore();
+            setGameState((prev: any) => ({
+              ...prev,
+              p2Score: data.p2Score,
+              currentTurn: 0,
+              currentAccumulated: 0,
+            }));
           }
         }
       } catch (err) {
-        console.error('AI turn error:', err);
+        console.error('AI turn execution error:', err);
+        // Fallback: reset turn to player so game is never locked
+        setGameState((prev: any) => ({
+          ...prev,
+          currentTurn: 0,
+          currentAccumulated: 0,
+        }));
       } finally {
         setIsAiThinking(false);
+        aiExecutingRef.current = false;
       }
-    }, 1200);
+    }, 1100);
+  };
 
-    return () => clearTimeout(timer);
+  // Watch for AI turn triggers as a backup watcher
+  useEffect(() => {
+    if (gameState && gameState.status === 'ACTIVE' && gameState.currentTurn === 1 && !isAiThinking && !aiExecutingRef.current) {
+      executeAiTurn(gameState.id, !!user?.isDemo);
+    }
   }, [gameState?.currentTurn, gameState?.id, gameState?.status, isAiThinking, user?.isDemo]);
 
   // Trigger floating praise banner
@@ -208,6 +224,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               currentAccumulated: 0,
               currentTurn: 1, // AI Turn
             }));
+            executeAiTurn(gameState.id, true);
           } else {
             soundManager.playDiceRoll();
             setFloatingScore(rollVal);
@@ -246,6 +263,12 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
           if (data.turnBusted) {
             soundManager.playBustOne();
             triggerPraise('💥 BUSTED! Rolled 1 😭', 'from-red-600 to-red-800 text-white');
+            setGameState((prev: any) => ({
+              ...prev,
+              currentAccumulated: 0,
+              currentTurn: 1,
+            }));
+            executeAiTurn(gameState.id, false);
           } else {
             soundManager.playDiceRoll();
             setFloatingScore(rollVal);
@@ -258,20 +281,20 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               soundManager.playWoow();
               triggerPraise('⚡ WOOW! +5 POINTS! 🚀', 'from-emerald-400 to-teal-500 text-slate-950');
             }
-          }
 
-          setGameState((prev: any) => ({
-            ...prev,
-            currentAccumulated: data.currentAccumulated,
-            currentTurn: data.currentTurn,
-          }));
+            setGameState((prev: any) => ({
+              ...prev,
+              currentAccumulated: data.currentAccumulated,
+              currentTurn: data.currentTurn,
+            }));
+          }
         }
       } catch (err: any) {
         setError(err.message);
       } finally {
         setIsRolling(false);
       }
-    }, 1200);
+    }, 700);
   };
 
   // Hold Score
@@ -306,6 +329,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
             currentAccumulated: 0,
             currentTurn: 1, // Pass to AI
           }));
+          executeAiTurn(gameState.id, true);
         }
       } else {
         // Real Money Backend Hold API
@@ -330,18 +354,25 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
           confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
           onBalanceUpdate(data.newBalance);
           triggerPraise('🏆 VICTORY! MATCH WON! 🎉', 'from-amber-300 via-amber-400 to-amber-500 text-slate-950');
+          setGameState((prev: any) => ({
+            ...prev,
+            p1Score: data.p1Score,
+            p2Score: data.p2Score,
+            currentAccumulated: 0,
+            status: 'COMPLETED',
+            winner: 'PLAYER',
+            winnerPayout: data.winnerPayout,
+          }));
+        } else {
+          setGameState((prev: any) => ({
+            ...prev,
+            p1Score: data.p1Score,
+            p2Score: data.p2Score,
+            currentTurn: 1, // Pass to AI
+            currentAccumulated: 0,
+          }));
+          executeAiTurn(gameState.id, false);
         }
-
-        setGameState((prev: any) => ({
-          ...prev,
-          p1Score: data.p1Score,
-          p2Score: data.p2Score,
-          currentTurn: data.winner ? prev.currentTurn : data.currentTurn,
-          currentAccumulated: 0,
-          status: data.winner ? 'COMPLETED' : 'ACTIVE',
-          winner: data.winner,
-          winnerPayout: data.winnerPayout,
-        }));
       }
     } catch (err: any) {
       setError(err.message);
@@ -362,7 +393,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
 
       {/* Game Setup Card (When not in active game) */}
       {!gameState || gameState.status === 'COMPLETED' ? (
-        <div className="mx-auto max-w-xl rounded-3xl border border-slate-800 bg-slate-900/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+        <div className="mx-auto max-w-xl rounded-3xl border border-amber-500/30 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
           
           <div className="text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/30 glow-gold">
@@ -589,8 +620,8 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               </div>
             </div>
 
-            {/* Glossy 3D Illuminated Dice */}
-            <Dice3D value={lastDice} isRolling={isRolling} size={120} />
+            {/* True 3D Rotating Cube Dice */}
+            <Dice3D value={lastDice} isRolling={isRolling} size={110} />
 
             {/* Action Buttons */}
             <div className="mt-6 flex w-full max-w-sm gap-3">
