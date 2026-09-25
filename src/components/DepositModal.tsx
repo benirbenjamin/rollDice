@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, CreditCard, ShieldCheck, Zap, AlertCircle, Globe } from 'lucide-react';
 import { soundManager } from '@/lib/sound';
 
@@ -17,6 +17,16 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
   const [currency, setCurrency] = useState<string>('RWF');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Load Flutterwave inline script on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !(window as any).FlutterwaveCheckout) {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.flutterwave.com/v3.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  }, []);
 
   if (!isOpen) return null;
 
@@ -38,7 +48,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
     setLoading(true);
 
     try {
-      // 1. Initiate Deposit with backend
+      // 1. Initiate Deposit with backend to create transaction record & reference
       const res = await fetch('/api/wallet/deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,28 +61,78 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
         throw new Error(data.error || 'Failed to initiate deposit');
       }
 
-      // 2. Complete/Verify deposit
-      const verifyRes = await fetch('/api/wallet/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transactionId: data.transactionId,
-          isSimulated: true,
-        }),
-      });
+      // 2. Trigger Real Flutterwave Popup Modal if script is ready
+      if (typeof (window as any).FlutterwaveCheckout === 'function') {
+        (window as any).FlutterwaveCheckout({
+          public_key: data.publicKey || 'FLWPUBK_TEST-DEFAULT-PUBLIC-KEY',
+          tx_ref: data.reference,
+          amount: data.amount,
+          currency: data.currency || 'RWF',
+          payment_options: 'card, mobilemoneyrwanda, mobilemoney, ussd, banktransfer',
+          customer: {
+            email: data.customer?.email || user?.email || 'player@rolldice.app',
+            name: data.customer?.name || user?.name || 'RollDice Player',
+          },
+          customizations: {
+            title: 'RollDice Wallet Funding',
+            description: `Deposit ${data.currency} ${data.amount} to RollDice Account`,
+            logo: 'https://rolldice-kappa.vercel.app/logo.png',
+          },
+          callback: async function (flwResponse: any) {
+            // Payment processed by Flutterwave! Now verify with backend.
+            try {
+              const verifyRes = await fetch('/api/wallet/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  transactionId: data.transactionId,
+                  flwTransactionId: flwResponse.transaction_id || flwResponse.tx_ref,
+                }),
+              });
 
-      const verifyData = await verifyRes.json();
+              const verifyData = await verifyRes.json();
 
-      if (!verifyRes.ok) {
-        throw new Error(verifyData.error || 'Verification failed');
+              if (verifyRes.ok) {
+                soundManager.playVictory();
+                onSuccess(verifyData.newBalance);
+                onClose();
+              } else {
+                setError(verifyData.error || 'Payment verification failed');
+              }
+            } catch (err: any) {
+              setError('Failed to verify payment with server');
+            } finally {
+              setLoading(false);
+            }
+          },
+          onclose: function () {
+            setLoading(false);
+          },
+        });
+      } else {
+        // Fallback for environment where Flutterwave script is blocked or offline testing
+        const verifyRes = await fetch('/api/wallet/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transactionId: data.transactionId,
+            isSimulated: true,
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (!verifyRes.ok) {
+          throw new Error(verifyData.error || 'Verification failed');
+        }
+
+        soundManager.playHoldScore();
+        onSuccess(verifyData.newBalance);
+        onClose();
+        setLoading(false);
       }
-
-      soundManager.playHoldScore();
-      onSuccess(verifyData.newBalance);
-      onClose();
     } catch (err: any) {
       setError(err.message || 'Deposit failed');
-    } finally {
       setLoading(false);
     }
   };
@@ -89,7 +149,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
             </div>
             <div>
               <h3 className="text-lg font-bold text-white">Deposit Funds</h3>
-              <p className="text-xs text-slate-400">Instant Flutterwave Multi-Currency Payment</p>
+              <p className="text-xs text-slate-400">Official Flutterwave Multi-Currency Payment</p>
             </div>
           </div>
 
@@ -188,7 +248,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-emerald-500 transition disabled:opacity-50"
           >
             {loading ? (
-              <span className="animate-pulse">Processing Payment...</span>
+              <span className="animate-pulse">Opening Flutterwave Checkout...</span>
             ) : (
               <>
                 <Zap className="h-4 w-4" />
@@ -199,7 +259,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
 
           <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-            <span>256-bit encrypted bank & mobile money processing</span>
+            <span>256-bit encrypted Flutterwave card & mobile money checkout</span>
           </div>
         </form>
       </div>

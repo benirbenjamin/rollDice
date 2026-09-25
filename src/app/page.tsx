@@ -9,10 +9,11 @@ import { WithdrawModal } from '@/components/WithdrawModal';
 import { PvEGame } from '@/components/PvEGame';
 import { PvPGame } from '@/components/PvPGame';
 import { soundManager } from '@/lib/sound';
-import { Bot, Users, Trophy, ShieldCheck, Zap, HelpCircle, ArrowRight } from 'lucide-react';
+import { Bot, Users, Trophy, ShieldCheck, Zap, HelpCircle, ArrowRight, PlayCircle, Sparkles } from 'lucide-react';
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [activeTab, setActiveTab] = useState<'PVE' | 'PVP'>('PVE');
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
@@ -25,11 +26,27 @@ export default function Home() {
       const data = await res.json();
       if (res.ok && data.user) {
         setUser(data.user);
+        setIsDemoMode(false);
       } else {
-        setUser(null);
+        // Default guest user to demo mode if not logged in
+        setUser({
+          id: 'demo_guest_' + Date.now(),
+          name: 'Demo Guest',
+          email: 'demo@rolldice.app',
+          wallet_balance: 10000,
+          isDemo: true,
+        });
+        setIsDemoMode(true);
       }
     } catch {
-      setUser(null);
+      setUser({
+        id: 'demo_guest_' + Date.now(),
+        name: 'Demo Guest',
+        email: 'demo@rolldice.app',
+        wallet_balance: 10000,
+        isDemo: true,
+      });
+      setIsDemoMode(true);
     }
   };
 
@@ -40,7 +57,32 @@ export default function Home() {
   const handleLogout = async () => {
     soundManager.playClick();
     await fetch('/api/auth/logout', { method: 'POST' });
-    setUser(null);
+    setUser({
+      id: 'demo_guest_' + Date.now(),
+      name: 'Demo Guest',
+      email: 'demo@rolldice.app',
+      wallet_balance: 10000,
+      isDemo: true,
+    });
+    setIsDemoMode(true);
+  };
+
+  const handleToggleDemo = () => {
+    soundManager.playClick();
+    if (isDemoMode) {
+      // Switch to Real mode if user is logged in
+      fetchUser();
+    } else {
+      // Enable Demo mode
+      setIsDemoMode(true);
+      setUser({
+        id: 'demo_guest_' + Date.now(),
+        name: 'Demo Guest',
+        email: 'demo@rolldice.app',
+        wallet_balance: 10000,
+        isDemo: true,
+      });
+    }
   };
 
   const handleBalanceUpdate = (newBalance: number) => {
@@ -66,6 +108,44 @@ export default function Home() {
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 space-y-8">
         
+        {/* Demo Mode Announcement Pill */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900 to-amber-500/10 p-4 shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <Sparkles className="h-5 w-5 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-black text-white">
+                  {isDemoMode ? '🎮 Practice Demo Mode Active' : '💰 Real Money Wagering Active'}
+                </h4>
+                {isDemoMode && (
+                  <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black text-emerald-400 border border-emerald-500/30">
+                    FREE RWF 10,000 DEMO CREDITS
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400">
+                {isDemoMode
+                  ? 'Play risk-free with 10,000 free demo credits. Test roll animations & sounds!'
+                  : 'Playing for real money payouts via instant Flutterwave mobile money & bank transfer.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleToggleDemo}
+            className={`shrink-0 flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black transition shadow-md ${
+              isDemoMode
+                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-500/20 hover:from-emerald-400 hover:to-emerald-500'
+                : 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500'
+            }`}
+          >
+            <PlayCircle className="h-4 w-4" />
+            {isDemoMode ? 'Switch to Real Money Mode' : 'Try Free Demo Mode'}
+          </button>
+        </div>
+
         {/* Hero Banner with Custom Logo */}
         <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 sm:p-10 shadow-2xl">
           
@@ -78,7 +158,7 @@ export default function Home() {
             <div className="max-w-xl space-y-4 text-center md:text-left">
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1 text-xs font-bold text-amber-300">
                 <Zap className="h-3.5 w-3.5" />
-                <span>Real-Money Wagering Platform</span>
+                <span>Real-Money Wagering & Free Demo</span>
               </div>
 
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
@@ -101,7 +181,7 @@ export default function Home() {
                   How to Play Rules
                 </button>
 
-                {!user && (
+                {!user || user.isDemo ? (
                   <Link
                     href="/login"
                     className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-xs font-extrabold text-slate-950 shadow-lg shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500 transition"
@@ -109,7 +189,7 @@ export default function Home() {
                     <span>Register / Login</span>
                     <ArrowRight className="h-4 w-4" />
                   </Link>
-                )}
+                ) : null}
               </div>
             </div>
 
@@ -134,7 +214,7 @@ export default function Home() {
           <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 text-xs text-slate-300 space-y-3 shadow-xl">
             <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2">
               <ShieldCheck className="h-4 w-4" />
-              Game Rules & Monetization Mechanics
+              Game Rules & Wagering Mechanics
             </h3>
             <ul className="list-disc pl-5 space-y-1.5 text-slate-400">
               <li>

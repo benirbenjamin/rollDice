@@ -81,7 +81,7 @@ class SoundEngine {
     }
   }
 
-  // Sound 3: Dice Roll Impact / Tumble
+  // Sound 3: Dice Roll Impact
   public playDiceRoll() {
     if (this.isMuted) return;
     this.initCtx();
@@ -105,7 +105,55 @@ class SoundEngine {
     osc.stop(now + 0.12);
   }
 
-  // Sound 4: Hold Points Sound (Chime Chord)
+  // Sound 4: "WOOW!" High Roll Sound Effect (Ascending Pitch Bend)
+  public playWoow() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(350, now);
+    osc.frequency.exponentialRampToValueAtTime(950, now + 0.25);
+
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.28);
+  }
+
+  // Sound 5: "FANTASTIC!" Mega Combo Sound
+  public playFantastic() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const freqs = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
+    freqs.forEach((freq, idx) => {
+      setTimeout(() => {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.2);
+      }, idx * 50);
+    });
+  }
+
+  // Sound 6: Hold Points Sound (Chime Chord)
   public playHoldScore() {
     if (this.isMuted) return;
     this.initCtx();
@@ -132,7 +180,7 @@ class SoundEngine {
     });
   }
 
-  // Sound 5: Rolled 1 Bust Buzz
+  // Sound 7: Rolled 1 Bust Buzz
   public playBustOne() {
     if (this.isMuted) return;
     this.initCtx();
@@ -156,7 +204,7 @@ class SoundEngine {
     osc.stop(now + 0.3);
   }
 
-  // Sound 6: Victory Fanfare
+  // Sound 8: Victory Fanfare
   public playVictory() {
     if (this.isMuted) return;
     this.initCtx();
