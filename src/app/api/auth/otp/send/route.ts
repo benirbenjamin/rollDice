@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       const userId = 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
       const displayName = name ? name.trim() : cleanEmail.split('@')[0];
       await dbExecute(
-        `INSERT INTO users (id, name, email, role, wallet_balance, is_verified, status) VALUES (?, ?, ?, 'USER', 0.00, 0, 'ACTIVE')`,
+        `INSERT INTO users (id, name, email, role, wallet_balance, is_verified, status) VALUES (?, ?, ?, 'USER', 0.00, false, 'ACTIVE')`,
         [userId, displayName, cleanEmail]
       );
     }

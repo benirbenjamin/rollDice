@@ -74,7 +74,7 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
     }
 
     if (user.wallet_balance < stake) {
-      setError(`Insufficient balance. Available: ₦${user.wallet_balance.toLocaleString()}`);
+      setError(`Insufficient balance. Available: RWF ${user.wallet_balance.toLocaleString()}`);
       return;
     }
 
@@ -264,7 +264,7 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
 
             <div className="mt-6 flex flex-col md:flex-row items-center gap-4 border-t border-slate-800 pt-5">
               <div className="flex-1 w-full">
-                <label className="block text-xs font-semibold text-slate-300 mb-2">Select Room Stake (NGN)</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-2">Select Room Stake (RWF)</label>
                 <div className="grid grid-cols-5 gap-2">
                   {stakes.map((val) => (
                     <button
@@ -280,7 +280,7 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
                           : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      ₦{val.toLocaleString()}
+                      RWF {val.toLocaleString()}
                     </button>
                   ))}
                 </div>
@@ -318,7 +318,7 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-extrabold text-white">{r.player1_name || 'Player'}</span>
                         <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-amber-400">
-                          ₦{Number(r.stake).toLocaleString()} Stake
+                          RWF {Number(r.stake).toLocaleString()} Stake
                         </span>
                       </div>
                       <p className="mt-1 text-[10px] text-slate-400">

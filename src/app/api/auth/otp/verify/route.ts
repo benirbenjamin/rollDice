@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     // Mark user as verified and get full record
-    await dbExecute(`UPDATE users SET is_verified = 1 WHERE LOWER(email) = LOWER(?)`, [cleanEmail]);
+    await dbExecute(`UPDATE users SET is_verified = true WHERE LOWER(email) = LOWER(?)`, [cleanEmail]);
 
     const users = await dbQuery(`SELECT id, name, email, role, wallet_balance FROM users WHERE LOWER(email) = LOWER(?)`, [cleanEmail]);
 

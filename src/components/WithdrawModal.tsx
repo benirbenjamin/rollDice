@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, ArrowUpRight, Building2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Building2, ShieldCheck, Zap, AlertCircle, Globe } from 'lucide-react';
 import { soundManager } from '@/lib/sound';
 
 interface WithdrawModalProps {
@@ -11,14 +11,10 @@ interface WithdrawModalProps {
   userBalance: number;
 }
 
-export const WithdrawModal: React.FC<WithdrawModalProps> = ({
-  isOpen,
-  onClose,
-  onSuccess,
-  userBalance,
-}) => {
-  const [amount, setAmount] = useState<string>('5000');
-  const [bankCode, setBankCode] = useState<string>('044'); // Access Bank default
+export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose, onSuccess, userBalance }) => {
+  const [amount, setAmount] = useState<string>('');
+  const [currency, setCurrency] = useState<string>('RWF');
+  const [bankCode, setBankCode] = useState<string>('RWF_MTN');
   const [accountNumber, setAccountNumber] = useState<string>('');
   const [accountName, setAccountName] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -26,36 +22,27 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
   if (!isOpen) return null;
 
-  const popularBanks = [
-    { code: '044', name: 'Access Bank' },
-    { code: '058', name: 'GTBank (Guaranty Trust)' },
-    { code: '057', name: 'Zenith Bank' },
-    { code: '033', name: 'UBA (United Bank for Africa)' },
-    { code: '011', name: 'First Bank of Nigeria' },
-    { code: '50515', name: 'Moniepoint Microfinance' },
-    { code: '999992', name: 'OPay Digital Services' },
-    { code: '50211', name: 'Kuda Microfinance' },
-  ];
+  const currencies = ['RWF', 'NGN', 'USD', 'KES', 'GHS'];
 
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     soundManager.playClick();
     setError(null);
 
-    const wthVal = Number(amount);
+    const withdrawVal = Number(amount);
 
-    if (isNaN(wthVal) || wthVal < 1000) {
-      setError('Minimum withdrawal is ₦1,000');
+    if (isNaN(withdrawVal) || withdrawVal < 1000) {
+      setError(`Minimum withdrawal is ${currency} 1,000`);
       return;
     }
 
-    if (wthVal > userBalance) {
-      setError(`Insufficient balance. Available: ₦${userBalance.toLocaleString()}`);
+    if (withdrawVal > userBalance) {
+      setError(`Insufficient balance. Maximum available: ${currency} ${userBalance.toLocaleString()}`);
       return;
     }
 
-    if (!accountNumber || accountNumber.length < 10) {
-      setError('Please enter a valid 10-digit account number');
+    if (!accountNumber || accountNumber.length < 8) {
+      setError('Please enter a valid account or mobile money number');
       return;
     }
 
@@ -66,10 +53,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: wthVal,
+          amount: withdrawVal,
+          currency,
           account_bank: bankCode,
           account_number: accountNumber,
-          account_name: accountName || 'Account Holder',
+          account_name: accountName,
         }),
       });
 
@@ -79,11 +67,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
         throw new Error(data.error || 'Withdrawal failed');
       }
 
-      soundManager.playVictory();
+      soundManager.playHoldScore();
       onSuccess(data.newBalance);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Withdrawal failed');
+      setError(err.message || 'Withdrawal request failed');
     } finally {
       setLoading(false);
     }
@@ -97,11 +85,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
         <div className="flex items-center justify-between pb-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <ArrowUpRight className="h-5 w-5" />
+              <Building2 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Withdraw Winnings</h3>
-              <p className="text-xs text-slate-400">Instant Automated Bank & Wallet Payout</p>
+              <h3 className="text-lg font-bold text-white">Withdraw Earnings</h3>
+              <p className="text-xs text-slate-400">Available Balance: {currency} {userBalance.toLocaleString()}</p>
             </div>
           </div>
 
@@ -125,60 +113,88 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
         <form onSubmit={handleWithdrawSubmit} className="mt-5 space-y-4">
           
-          {/* Amount */}
+          {/* Currency Selector */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold text-slate-300">Withdrawal Amount (NGN)</label>
-              <span className="text-[11px] text-amber-400">Avail: ₦{userBalance.toLocaleString()}</span>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <Globe className="h-3.5 w-3.5 text-amber-400" />
+              Payout Currency (Main: RWF)
+            </label>
+            <div className="flex gap-2">
+              {currencies.map((curr) => (
+                <button
+                  key={curr}
+                  type="button"
+                  onClick={() => {
+                    soundManager.playClick();
+                    setCurrency(curr);
+                  }}
+                  className={`flex-1 rounded-xl border py-2 text-xs font-extrabold transition ${
+                    currency === curr
+                      ? 'border-amber-400 bg-amber-500/20 text-amber-300'
+                      : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                  }`}
+                >
+                  {curr}
+                </button>
+              ))}
             </div>
-            <input
-              type="number"
-              min="1000"
-              placeholder="e.g. 5000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none"
-            />
           </div>
 
-          {/* Select Bank */}
+          {/* Amount */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Select Destination Bank</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Withdrawal Amount ({currency})</label>
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{currency}</span>
+              <input
+                type="number"
+                min="1000"
+                placeholder="e.g. 5000"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2.5 pl-14 pr-4 text-sm font-semibold text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Bank / Mobile Money Selection */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Payout Method</label>
             <select
               value={bankCode}
               onChange={(e) => setBankCode(e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs font-semibold text-white focus:border-amber-400 focus:outline-none"
             >
-              {popularBanks.map((b) => (
-                <option key={b.code} value={b.code}>
-                  {b.name}
-                </option>
-              ))}
+              <option value="RWF_MTN">MTN Mobile Money Rwanda (RWF)</option>
+              <option value="RWF_AIRTEL">Airtel Money Rwanda (RWF)</option>
+              <option value="BK_RWANDA">Bank of Kigali (RWF)</option>
+              <option value="EQUITY_RWANDA">Equity Bank Rwanda</option>
+              <option value="NGN_BANKS">Nigerian Commercial Banks (NGN)</option>
+              <option value="KES_MPESA">M-Pesa Kenya (KES)</option>
             </select>
           </div>
 
           {/* Account Number */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">10-Digit NUBAN Account Number</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Account / Phone Number</label>
             <input
               type="text"
-              maxLength={10}
-              placeholder="0123456789"
+              required
+              placeholder="e.g. 078XXXXXXX or Account No."
               value={accountNumber}
               onChange={(e) => setAccountNumber(e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2.5 px-4 text-sm font-semibold text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none"
             />
           </div>
 
-          {/* Account Holder Name */}
+          {/* Account Name */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Account Holder Full Name</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Account Holder Name</label>
             <input
               type="text"
-              placeholder="e.g. John Doe"
+              placeholder="Full Registered Name"
               value={accountName}
               onChange={(e) => setAccountName(e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2.5 px-4 text-sm font-semibold text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none"
             />
           </div>
 
@@ -189,14 +205,19 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500 transition disabled:opacity-50"
           >
             {loading ? (
-              <span className="animate-pulse">Processing Transfer...</span>
+              <span className="animate-pulse">Processing Payout...</span>
             ) : (
               <>
-                <Building2 className="h-4 w-4" />
-                Transfer ₦{Number(amount || 0).toLocaleString()} to Bank
+                <Zap className="h-4 w-4 fill-slate-950" />
+                Request {currency} {amount ? Number(amount).toLocaleString() : '0'} Payout
               </>
             )}
           </button>
+
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+            <ShieldCheck className="h-3.5 w-3.5 text-amber-400" />
+            <span>Automated bank & mobile wallet transfers</span>
+          </div>
         </form>
       </div>
     </div>

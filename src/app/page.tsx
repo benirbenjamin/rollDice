@@ -86,7 +86,7 @@ export default function Home() {
               </h1>
 
               <p className="text-sm text-slate-400 leading-relaxed">
-                Experience high-stakes Pig Dice wagering with automated Flutterwave instant deposits & payouts, provably fair RNG, and a 90% return house-edge architecture.
+                Experience high-stakes Pig Dice wagering with automated Flutterwave instant deposits & payouts and provably fair RNG.
               </p>
 
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
@@ -147,7 +147,7 @@ export default function Home() {
                 <strong className="text-white">Holding:</strong> Click HOLD to save your current turn score into your permanent total score.
               </li>
               <li>
-                <strong className="text-white">House Edge & Pot Rake:</strong> On winning a match, the total pot (Stake × 2) is awarded minus a 10% house rake.
+                <strong className="text-white">Winning:</strong> The first player to reach or exceed the target score wins the match pot!
               </li>
             </ul>
           </div>

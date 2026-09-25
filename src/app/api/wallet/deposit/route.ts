@@ -9,21 +9,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { amount } = await req.json();
+    const { amount, currency } = await req.json();
     const depositAmount = Number(amount);
 
-    if (isNaN(depositAmount) || depositAmount < 500) {
-      return NextResponse.json({ error: 'Minimum deposit amount is ₦500' }, { status: 400 });
+    if (isNaN(depositAmount) || depositAmount < 100) {
+      return NextResponse.json({ error: 'Minimum deposit amount is 100' }, { status: 400 });
     }
 
+    const selectedCurrency = currency || 'RWF';
     const txId = 'tx_dep_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     const flwRef = 'FLW_REF_' + Date.now();
 
     // Record pending transaction
     await dbExecute(
-      `INSERT INTO transactions (id, user_id, type, amount, status, flutterwave_ref, payment_method)
-       VALUES (?, ?, 'DEPOSIT', ?, 'PENDING', ?, 'FLUTTERWAVE')`,
-      [txId, user.id, depositAmount, flwRef]
+      `INSERT INTO transactions (id, user_id, type, amount, status, flutterwave_ref, payment_method, metadata)
+       VALUES (?, ?, 'DEPOSIT', ?, 'PENDING', ?, 'FLUTTERWAVE', ?)`,
+      [txId, user.id, depositAmount, flwRef, JSON.stringify({ currency: selectedCurrency })]
     );
 
     return NextResponse.json({
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
       transactionId: txId,
       reference: flwRef,
       amount: depositAmount,
+      currency: selectedCurrency,
       customer: {
         email: user.email,
         name: user.name,

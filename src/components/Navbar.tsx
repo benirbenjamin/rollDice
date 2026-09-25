@@ -65,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenDeposit, onOpenWithd
                   <Wallet className="h-4 w-4 text-amber-400" />
                   <span className="text-xs font-medium text-slate-400">Balance:</span>
                   <span className="text-sm font-bold text-emerald-400">
-                    ₦{Number(user.wallet_balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    RWF {Number(user.wallet_balance || 0).toLocaleString('en-US', { minimumFractionDigits: 0 })}
                   </span>
                 </div>
                 

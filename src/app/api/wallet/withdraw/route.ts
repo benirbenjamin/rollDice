@@ -10,15 +10,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { amount, account_bank, account_number, account_name } = await req.json();
+    const { amount, account_bank, account_number, account_name, currency } = await req.json();
     const withdrawAmount = Number(amount);
+    const selectedCurrency = currency || 'RWF';
 
     if (isNaN(withdrawAmount) || withdrawAmount < 1000) {
-      return NextResponse.json({ error: 'Minimum withdrawal amount is ₦1,000' }, { status: 400 });
+      return NextResponse.json({ error: `Minimum withdrawal amount is ${selectedCurrency} 1,000` }, { status: 400 });
     }
 
     if (!account_bank || !account_number) {
-      return NextResponse.json({ error: 'Bank details (bank code and account number) are required' }, { status: 400 });
+      return NextResponse.json({ error: 'Bank/Mobile details are required' }, { status: 400 });
     }
 
     // Check user wallet balance
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
         user.id,
         withdrawAmount,
         flwRef,
-        JSON.stringify({ account_bank, account_number, account_name }),
+        JSON.stringify({ account_bank, account_number, account_name, currency: selectedCurrency }),
       ]
     );
 
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
         account_bank,
         account_number,
         amount: withdrawAmount,
-        currency: 'NGN',
+        currency: selectedCurrency,
         narration: 'RollDice Payout',
         reference: flwRef,
       });
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Withdrawal of ₦${withdrawAmount.toLocaleString()} processed successfully!`,
+      message: `Withdrawal of ${selectedCurrency} ${withdrawAmount.toLocaleString()} processed successfully!`,
       newBalance,
       reference: flwRef,
     });

@@ -34,7 +34,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
     }
 
     if (user.wallet_balance < stake) {
-      setError(`Insufficient balance. Available: ₦${user.wallet_balance.toLocaleString()}`);
+      setError(`Insufficient balance. Available: RWF ${user.wallet_balance.toLocaleString()}`);
       return;
     }
 
@@ -173,7 +173,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               </h3>
               <p className="mt-1 text-xs">
                 {gameState.winner === 'PLAYER'
-                  ? `Payout of ₦${Number(gameState.winnerPayout || 0).toLocaleString()} credited to your wallet!`
+                  ? `Payout of RWF ${Number(gameState.winnerPayout || 0).toLocaleString()} credited to your wallet!`
                   : 'Better luck next time! Strategy is key.'}
               </p>
             </div>
@@ -198,7 +198,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
 
           <div className="mt-6 space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Select Stake Amount (NGN)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">Select Stake Amount (RWF)</label>
               <div className="grid grid-cols-5 gap-2">
                 {stakes.map((val) => (
                   <button
@@ -214,16 +214,16 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
                         : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
                     }`}
                   >
-                    ₦{val.toLocaleString()}
+                    RWF {val.toLocaleString()}
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-[11px] text-slate-400 flex items-center justify-between">
-              <span>Potential Payout (90% Return after 10% House Rake):</span>
+              <span>Match Wager Pot:</span>
               <span className="font-extrabold text-emerald-400 text-sm">
-                ₦{(stake * 1.8).toLocaleString()}
+                RWF {(stake * 2).toLocaleString()}
               </span>
             </div>
 
@@ -232,7 +232,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 py-3.5 text-base font-extrabold text-slate-950 shadow-xl shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 transition scale-100 hover:scale-[1.01]"
             >
               <Play className="h-5 w-5 fill-slate-950" />
-              Start Match (₦{stake.toLocaleString()} Stake)
+              Start Match (RWF {stake.toLocaleString()} Stake)
             </button>
           </div>
         </div>
@@ -246,7 +246,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
               <span className="text-xs font-semibold text-slate-300">PvE Match</span>
               <span className="rounded-md bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-400">
-                Stake: ₦{Number(gameState.stake).toLocaleString()}
+                Stake: RWF {Number(gameState.stake).toLocaleString()}
               </span>
             </div>
 

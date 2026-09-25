@@ -204,7 +204,7 @@ export default function AdminPage() {
               </div>
             </div>
             <div className="mt-3 text-2xl font-extrabold text-amber-400">
-              ₦{Number(data?.stats?.houseRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              RWF {Number(data?.stats?.houseRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 0 })}
             </div>
             <p className="mt-1 text-[11px] text-slate-500">Net platform earnings retained</p>
           </div>
@@ -218,7 +218,7 @@ export default function AdminPage() {
               </div>
             </div>
             <div className="mt-3 text-2xl font-extrabold text-emerald-400">
-              ₦{Number(data?.stats?.totalWagerVolume || 0).toLocaleString()}
+              RWF {Number(data?.stats?.totalWagerVolume || 0).toLocaleString()}
             </div>
             <p className="mt-1 text-[11px] text-slate-500">Cumulative player stakes</p>
           </div>
@@ -274,7 +274,7 @@ export default function AdminPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Minimum Stake (NGN)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Minimum Stake (RWF)</label>
               <input
                 type="number"
                 min="100"
@@ -285,7 +285,7 @@ export default function AdminPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Maximum Stake (NGN)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Maximum Stake (RWF)</label>
               <input
                 type="number"
                 min="1000"
@@ -354,7 +354,7 @@ export default function AdminPage() {
                       </span>
                     </td>
                     <td className="p-3 font-mono font-bold text-emerald-400">
-                      ₦{Number(u.wallet_balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      RWF {Number(u.wallet_balance || 0).toLocaleString('en-US', { minimumFractionDigits: 0 })}
                     </td>
                     <td className="p-3">
                       <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${
@@ -401,9 +401,8 @@ export default function AdminPage() {
                 Adjust Balance for {selectedUser.name}
               </h4>
               <p className="text-xs text-slate-400 mb-4">
-                Current: ₦{Number(selectedUser.wallet_balance || 0).toLocaleString()}
+                Current: RWF {Number(selectedUser.wallet_balance || 0).toLocaleString()}
               </p>
-
               <div className="space-y-4">
                 <input
                   type="number"
