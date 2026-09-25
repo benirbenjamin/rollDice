@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
+import { BottomNav } from '@/components/BottomNav';
 import { PvEGame } from '@/components/PvEGame';
 import { PvPGame } from '@/components/PvPGame';
 import { DepositModal } from '@/components/DepositModal';
@@ -75,7 +76,7 @@ function PlayArenaContent() {
         onLogout={handleLogout}
       />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 space-y-6">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 pb-24 md:pb-6 sm:px-6 space-y-6">
         
         {/* Top Arena Navigation Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-4 shadow-xl">
@@ -162,6 +163,19 @@ function PlayArenaContent() {
         onClose={() => setIsWithdrawOpen(false)}
         onSuccess={handleBalanceUpdate}
         userBalance={user?.wallet_balance || 0}
+      />
+
+      {/* Mobile Bottom Navigation Bar */}
+      <BottomNav
+        user={user}
+        onOpenDeposit={() => {
+          soundManager.playClick();
+          setIsDepositOpen(true);
+        }}
+        onOpenWithdraw={() => {
+          soundManager.playClick();
+          setIsWithdrawOpen(true);
+        }}
       />
     </div>
   );

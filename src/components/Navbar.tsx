@@ -81,8 +81,8 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenDeposit, onOpenWithd
           {user ? (
             <>
               {/* Compact Wallet Pill */}
-              <div className="flex items-center rounded-xl border border-amber-500/30 bg-slate-900/90 p-1 pl-2.5 shadow-md">
-                <div className="flex items-center gap-1.5 mr-2">
+              <div className="flex items-center rounded-xl border border-amber-500/30 bg-slate-900/90 px-2.5 py-1.5 shadow-md">
+                <div className="flex items-center gap-1.5">
                   <Wallet className="h-3.5 w-3.5 text-amber-400" />
                   <span className="text-xs font-black text-emerald-400">
                     RWF {Number(user.wallet_balance || 0).toLocaleString('en-US')}
@@ -91,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenDeposit, onOpenWithd
                 
                 <button
                   onClick={onOpenDeposit}
-                  className="flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-2 py-1 text-[11px] font-bold text-white transition"
+                  className="hidden md:flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 ml-2 px-2 py-1 text-[11px] font-bold text-white transition"
                 >
                   <Plus className="h-3 w-3" />
                   <span>+ Deposit</span>

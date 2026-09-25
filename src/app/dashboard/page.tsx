@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
+import { BottomNav } from '@/components/BottomNav';
 import { DepositModal } from '@/components/DepositModal';
 import { WithdrawModal } from '@/components/WithdrawModal';
 import { soundManager } from '@/lib/sound';
@@ -93,7 +94,7 @@ export default function DashboardPage() {
         onLogout={handleLogout}
       />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 space-y-8">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 pb-24 md:pb-8 sm:px-6 space-y-8">
         
         {/* Welcome Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 sm:p-8 shadow-2xl">
@@ -310,6 +311,19 @@ export default function DashboardPage() {
         onClose={() => setIsWithdrawOpen(false)}
         onSuccess={handleBalanceUpdate}
         userBalance={user?.wallet_balance || 0}
+      />
+
+      {/* Mobile Bottom Navigation Bar */}
+      <BottomNav
+        user={user}
+        onOpenDeposit={() => {
+          soundManager.playClick();
+          setIsDepositOpen(true);
+        }}
+        onOpenWithdraw={() => {
+          soundManager.playClick();
+          setIsWithdrawOpen(true);
+        }}
       />
     </div>
   );
