@@ -6,6 +6,8 @@ import { Dice3D } from './Dice3D';
 import { soundManager } from '@/lib/sound';
 import { Play, Award, Bot, User, Zap, AlertTriangle, ShieldCheck, Sparkles, Flame, Trophy, RotateCcw } from 'lucide-react';
 
+import { MultiplierWheelModal } from './MultiplierWheelModal';
+
 interface PvEGameProps {
   user: any;
   onBalanceUpdate: (newBalance: number) => void;
@@ -28,6 +30,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
   const [praiseBanner, setPraiseBanner] = useState<{ text: string; color: string } | null>(null);
   const [floatingScore, setFloatingScore] = useState<number | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
+  const [showWheelModal, setShowWheelModal] = useState(false);
 
   const stakes = [20, 50, 100, 200, 500, 1000];
   const targetOptions = [50, 100, 200];
@@ -433,27 +436,56 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
 
             {gameState.winner === 'PLAYER' && (
               <div className="mt-5 rounded-2xl border border-emerald-500/40 bg-emerald-950/60 p-4 shadow-inner">
-                <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block">Match Winnings Payout</span>
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block">Standard Match Winnings</span>
                 <div className="text-3xl sm:text-4xl font-black text-emerald-300 mt-1">
-                  +RWF {Number(gameState.winnerPayout || gameState.stake * 2).toLocaleString()} 💸
+                  +RWF {Number(gameState.winnerPayout || gameState.stake * 1.8).toLocaleString()} 💸
                 </div>
               </div>
             )}
 
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 space-y-2.5">
+              {gameState.winner === 'PLAYER' && (
+                <button
+                  onClick={() => {
+                    soundManager.playClick();
+                    setShowGameOverModal(false);
+                    setShowWheelModal(true);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 py-3.5 text-xs sm:text-sm font-black text-slate-950 shadow-xl shadow-amber-500/30 hover:from-amber-400 hover:to-amber-500 transition scale-100 hover:scale-[1.01]"
+                >
+                  <Sparkles className="h-4 w-4 fill-slate-950" />
+                  SPIN MULTIPLIER WHEEL (Up to 1000x! 🎰)
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   soundManager.playClick();
                   setShowGameOverModal(false);
                   setGameState(null);
                 }}
-                className="flex-1 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 py-3.5 text-xs sm:text-sm font-black text-slate-950 shadow-lg hover:from-amber-400 hover:to-amber-500 transition"
+                className="w-full rounded-2xl border border-slate-700 bg-slate-950 py-3 text-xs sm:text-sm font-bold text-slate-300 hover:text-white hover:border-slate-600 transition"
               >
-                Play Next Match
+                {gameState.winner === 'PLAYER' ? 'Claim Standard Payout & Exit 💵' : 'Play Next Match'}
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Multiplier Spin Wheel Modal */}
+      {showWheelModal && gameState && (
+        <MultiplierWheelModal
+          isOpen={showWheelModal}
+          onClose={() => {
+            setShowWheelModal(false);
+            setGameState(null);
+          }}
+          roomId={gameState.id}
+          basePayout={gameState.winnerPayout || gameState.stake * 1.8}
+          isDemo={!!user?.isDemo}
+          onBalanceUpdate={onBalanceUpdate}
+        />
       )}
 
       {/* Game Setup Card (When not in active game) */}
