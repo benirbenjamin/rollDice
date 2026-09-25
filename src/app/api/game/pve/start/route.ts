@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Please login to play real-money games' }, { status: 401 });
     }
 
-    const { stake } = await req.json();
+    const { stake, targetScore: requestedTarget } = await req.json();
     const stakeAmount = Number(stake);
 
     // Get system settings for min/max stake and target score
@@ -18,11 +18,15 @@ export async function POST(req: Request) {
 
     const minStake = Number(settingsMap.get('min_stake') || 500);
     const maxStake = Number(settingsMap.get('max_stake') || 100000);
-    const targetScore = Number(settingsMap.get('target_score') || 100);
+    const defaultTarget = Number(settingsMap.get('target_score') || 100);
+
+    const targetScore = requestedTarget && [50, 100, 200].includes(Number(requestedTarget))
+      ? Number(requestedTarget)
+      : defaultTarget;
 
     if (isNaN(stakeAmount) || stakeAmount < minStake || stakeAmount > maxStake) {
       return NextResponse.json(
-        { error: `Stake must be between ₦${minStake.toLocaleString()} and ₦${maxStake.toLocaleString()}` },
+        { error: `Stake must be between RWF ${minStake.toLocaleString()} and RWF ${maxStake.toLocaleString()}` },
         { status: 400 }
       );
     }

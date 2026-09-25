@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { Dice3D } from './Dice3D';
 import { soundManager } from '@/lib/sound';
-import { Play, Award, Bot, User, Zap, AlertTriangle, ShieldCheck, Sparkles, Flame, Trophy } from 'lucide-react';
+import { Play, Award, Bot, User, Zap, AlertTriangle, ShieldCheck, Sparkles, Flame, Trophy, RotateCcw } from 'lucide-react';
 
 interface PvEGameProps {
   user: any;
@@ -14,6 +14,7 @@ interface PvEGameProps {
 
 export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenDeposit }) => {
   const [stake, setStake] = useState<number>(1000);
+  const [targetScore, setTargetScore] = useState<number>(100);
   const [gameState, setGameState] = useState<any>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
@@ -21,18 +22,20 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
   const [error, setError] = useState<string | null>(null);
   const [aiLogs, setAiLogs] = useState<any[]>([]);
   
-  // Floating praise animation state
+  // Floating praise & victory modal state
   const [praiseBanner, setPraiseBanner] = useState<{ text: string; color: string } | null>(null);
   const [floatingScore, setFloatingScore] = useState<number | null>(null);
+  const [showGameOverModal, setShowGameOverModal] = useState(false);
 
   const stakes = [500, 1000, 2500, 5000, 10000];
+  const targetOptions = [50, 100, 200];
 
   // Ref to prevent double AI turn triggers
   const aiExecutingRef = useRef(false);
 
   // Execute AI Bot Turn cleanly
   const executeAiTurn = async (roomId: string, isDemoUser: boolean) => {
-    if (aiExecutingRef.current) return;
+    if (aiExecutingRef.current || (gameState && gameState.status === 'COMPLETED')) return;
     aiExecutingRef.current = true;
     setIsAiThinking(true);
 
@@ -42,11 +45,11 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
           // Local Demo AI Simulation
           let aiScore = gameState?.p2Score || 0;
           let aiAccumulated = 0;
-          const targetScore = gameState?.targetScore || 100;
+          const currentTarget = gameState?.targetScore || targetScore || 100;
           const logs: any[] = [];
           let aiBusted = false;
 
-          const needed = targetScore - aiScore;
+          const needed = currentTarget - aiScore;
           const threshold = Math.min(15, needed);
 
           while (aiAccumulated < threshold && !aiBusted) {
@@ -57,7 +60,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               logs.push({ roll: 1, accumulated: 0, busted: true, held: false });
             } else {
               aiAccumulated += roll;
-              const willHold = aiAccumulated >= threshold || aiScore + aiAccumulated >= targetScore;
+              const willHold = aiAccumulated >= threshold || aiScore + aiAccumulated >= currentTarget;
               logs.push({ roll, accumulated: aiAccumulated, busted: false, held: willHold });
             }
           }
@@ -68,7 +71,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
             aiScore += aiAccumulated;
           }
 
-          if (aiScore >= targetScore) {
+          if (aiScore >= currentTarget) {
             soundManager.playBustOne();
             setGameState((prev: any) => ({
               ...prev,
@@ -78,6 +81,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               currentTurn: 0,
               currentAccumulated: 0,
             }));
+            setShowGameOverModal(true);
           } else {
             soundManager.playHoldScore();
             setGameState((prev: any) => ({
@@ -109,6 +113,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               currentTurn: 0,
               currentAccumulated: 0,
             }));
+            setShowGameOverModal(true);
           } else {
             soundManager.playHoldScore();
             setGameState((prev: any) => ({
@@ -133,7 +138,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
     }, 1100);
   };
 
-  // Watch for AI turn triggers as a backup watcher
+  // Backup watcher for AI turn triggers
   useEffect(() => {
     if (gameState && gameState.status === 'ACTIVE' && gameState.currentTurn === 1 && !isAiThinking && !aiExecutingRef.current) {
       executeAiTurn(gameState.id, !!user?.isDemo);
@@ -151,6 +156,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
     soundManager.playClick();
     setError(null);
     setAiLogs([]);
+    setShowGameOverModal(false);
 
     if (!user) {
       setError('Please login or play in Demo mode');
@@ -168,12 +174,12 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
       setGameState({
         id: 'demo_room_' + Date.now(),
         stake,
+        targetScore,
         p1Score: 0,
         p2Score: 0,
         currentAccumulated: 0,
         currentTurn: 0,
         status: 'ACTIVE',
-        targetScore: 100,
         isDemo: true,
       });
       return;
@@ -184,7 +190,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
       const res = await fetch('/api/game/pve/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stake }),
+        body: JSON.stringify({ stake, targetScore }),
       });
 
       const data = await res.json();
@@ -202,7 +208,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
 
   // Roll Dice
   const handleRoll = async () => {
-    if (!gameState || gameState.currentTurn !== 0 || isRolling || isAiThinking) return;
+    if (!gameState || gameState.currentTurn !== 0 || isRolling || isAiThinking || gameState.status === 'COMPLETED') return;
 
     soundManager.playDiceShake();
     setIsRolling(true);
@@ -298,21 +304,23 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
 
   // Hold Score
   const handleHold = async () => {
-    if (!gameState || gameState.currentTurn !== 0 || isRolling || isAiThinking || gameState.currentAccumulated === 0) return;
+    if (!gameState || gameState.currentTurn !== 0 || isRolling || isAiThinking || gameState.currentAccumulated === 0 || gameState.status === 'COMPLETED') return;
 
     soundManager.playHoldScore();
     setError(null);
+
+    const matchTarget = gameState.targetScore || targetScore || 100;
 
     try {
       if (user?.isDemo) {
         // Demo Mode Hold Simulation
         const newP1Score = gameState.p1Score + gameState.currentAccumulated;
-        if (newP1Score >= 100) {
+        if (newP1Score >= matchTarget) {
           soundManager.playVictory();
-          confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+          confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
           const winPayout = gameState.stake * 2;
           onBalanceUpdate(user.wallet_balance + winPayout);
-          triggerPraise('🏆 VICTORY! MATCH WON! 🎉', 'from-amber-300 via-amber-400 to-amber-500 text-slate-950');
+          
           setGameState((prev: any) => ({
             ...prev,
             p1Score: newP1Score,
@@ -321,6 +329,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
             winner: 'PLAYER',
             winnerPayout: winPayout,
           }));
+          setShowGameOverModal(true);
         } else {
           setGameState((prev: any) => ({
             ...prev,
@@ -348,11 +357,10 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
           setAiLogs(data.aiLogs);
         }
 
-        if (data.winner === 'PLAYER') {
+        if (data.winner === 'PLAYER' || data.p1Score >= matchTarget) {
           soundManager.playVictory();
-          confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+          confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
           onBalanceUpdate(data.newBalance);
-          triggerPraise('🏆 VICTORY! MATCH WON! 🎉', 'from-amber-300 via-amber-400 to-amber-500 text-slate-950');
           setGameState((prev: any) => ({
             ...prev,
             p1Score: data.p1Score,
@@ -360,8 +368,20 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
             currentAccumulated: 0,
             status: 'COMPLETED',
             winner: 'PLAYER',
-            winnerPayout: data.winnerPayout,
+            winnerPayout: data.winnerPayout || gameState.stake * 1.8,
           }));
+          setShowGameOverModal(true);
+        } else if (data.winner === 'AI_BOT') {
+          soundManager.playBustOne();
+          setGameState((prev: any) => ({
+            ...prev,
+            p1Score: data.p1Score,
+            p2Score: data.p2Score,
+            currentAccumulated: 0,
+            status: 'COMPLETED',
+            winner: 'AI_BOT',
+          }));
+          setShowGameOverModal(true);
         } else {
           setGameState((prev: any) => ({
             ...prev,
@@ -390,6 +410,50 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
         </div>
       )}
 
+      {/* Game Over Victory Overlay Modal */}
+      {showGameOverModal && gameState && gameState.status === 'COMPLETED' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="relative w-full max-w-md overflow-hidden rounded-3xl border-2 border-amber-400 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 p-6 sm:p-8 text-center shadow-2xl glow-gold">
+            
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-300 to-amber-500 text-slate-950 shadow-xl glow-gold animate-bounce">
+              <Trophy className="h-10 w-10" />
+            </div>
+
+            <h2 className="mt-4 text-2xl sm:text-3xl font-black text-white">
+              {gameState.winner === 'PLAYER' ? '🎉 GAME OVER! YOU WON! 🏆' : '💥 GAME OVER! AI BOT WINS'}
+            </h2>
+
+            <p className="mt-2 text-xs sm:text-sm text-slate-300">
+              {gameState.winner === 'PLAYER'
+                ? `You reached target of ${gameState.targetScore || targetScore} points!`
+                : 'The AI Bot reached target first. Better luck next match!'}
+            </p>
+
+            {gameState.winner === 'PLAYER' && (
+              <div className="mt-5 rounded-2xl border border-emerald-500/40 bg-emerald-950/60 p-4 shadow-inner">
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block">Match Winnings Payout</span>
+                <div className="text-3xl sm:text-4xl font-black text-emerald-300 mt-1">
+                  +RWF {Number(gameState.winnerPayout || gameState.stake * 2).toLocaleString()} 💸
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => {
+                  soundManager.playClick();
+                  setShowGameOverModal(false);
+                  setGameState(null);
+                }}
+                className="flex-1 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 py-3.5 text-xs sm:text-sm font-black text-slate-950 shadow-lg hover:from-amber-400 hover:to-amber-500 transition"
+              >
+                Play Next Match
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Game Setup Card (When not in active game) */}
       {!gameState || gameState.status === 'COMPLETED' ? (
         <div className="mx-auto max-w-xl rounded-3xl border border-amber-500/30 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 p-5 sm:p-8 shadow-2xl backdrop-blur-xl">
@@ -402,34 +466,9 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               Single Player vs AI <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400" />
             </h2>
             <p className="mt-1 text-xs text-slate-400">
-              Challenge the RollDice AI Bot! First to reach <span className="font-extrabold text-amber-400">100 points</span> wins the pot!
+              Challenge the RollDice AI Bot! Set your custom target score and stake amount!
             </p>
           </div>
-
-          {gameState && gameState.status === 'COMPLETED' && (
-            <div className={`mt-5 rounded-2xl border p-4 sm:p-5 text-center shadow-xl ${
-              gameState.winner === 'PLAYER'
-                ? 'border-emerald-500/60 bg-emerald-950/50 text-emerald-300 shadow-emerald-500/20'
-                : 'border-red-500/60 bg-red-950/50 text-red-300 shadow-red-500/20'
-            }`}>
-              <h3 className="text-lg sm:text-xl font-black tracking-wide flex items-center justify-center gap-2">
-                {gameState.winner === 'PLAYER' ? (
-                  <>
-                    <Trophy className="h-5 w-5 text-amber-400" /> YOU WON THE MATCH! 🏆
-                  </>
-                ) : (
-                  <>
-                    🤖 AI BOT WINS! 💥
-                  </>
-                )}
-              </h3>
-              <p className="mt-1 text-xs font-semibold">
-                {gameState.winner === 'PLAYER'
-                  ? `Payout of RWF ${Number(gameState.winnerPayout || 0).toLocaleString()} credited to your wallet!`
-                  : 'Better luck next time! Strategy and timing are key.'}
-              </p>
-            </div>
-          )}
 
           {error && (
             <div className="mt-4 flex items-center justify-between rounded-xl bg-red-950/60 p-3 text-xs text-red-300 border border-red-800/50">
@@ -449,10 +488,39 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
           )}
 
           <div className="mt-5 space-y-4">
+            
+            {/* Target Score Selector */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
+                <span>Select Target Score to Win</span>
+                <span className="text-[10px] text-amber-400 font-bold">Custom Game Target</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {targetOptions.map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => {
+                      soundManager.playClick();
+                      setTargetScore(val);
+                    }}
+                    className={`rounded-xl border py-2.5 text-xs font-extrabold transition ${
+                      targetScore === val
+                        ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300 scale-105 shadow-md shadow-emerald-500/20'
+                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    {val} Points {val === 50 ? '⚡ (Fast)' : val === 100 ? '🎯 (Std)' : '🔥 (Long)'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Stake Amount Selector */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
                 <span>Select Stake Amount (RWF)</span>
-                <span className="text-[10px] text-amber-400 font-bold">Fast Wagering</span>
+                <span className="text-[10px] text-amber-400 font-bold">Wager Amount</span>
               </label>
               <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                 {stakes.map((val) => (
@@ -477,7 +545,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
 
             <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3 text-xs text-slate-400 flex items-center justify-between shadow-inner">
               <span className="flex items-center gap-1.5 font-bold">
-                <Flame className="h-4 w-4 text-amber-400" /> Match Wager Pot:
+                <Flame className="h-4 w-4 text-amber-400" /> Winner Match Pot:
               </span>
               <span className="font-black text-emerald-400 text-sm sm:text-base">
                 RWF {(stake * 2).toLocaleString()}
@@ -489,12 +557,12 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 py-3 sm:py-3.5 text-sm sm:text-base font-black text-slate-950 shadow-xl shadow-amber-500/30 hover:from-amber-400 hover:to-amber-500 transition scale-100 hover:scale-[1.01]"
             >
               <Play className="h-4 w-4 sm:h-5 sm:w-5 fill-slate-950" />
-              Start Match (RWF {stake.toLocaleString()} Stake)
+              Start Match ({targetScore} Target &bull; RWF {stake.toLocaleString()})
             </button>
           </div>
         </div>
       ) : (
-        /* Active Game Arena - Compacted for Mobile viewport fit */
+        /* Active Game Arena */
         <div className="mx-auto max-w-4xl space-y-3 sm:space-y-6">
           
           {/* Top Status Bar */}
@@ -508,14 +576,14 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] sm:text-xs">
-              <span className="text-slate-400">Target:</span>
-              <span className="rounded bg-slate-800 px-2 py-0.5 font-black text-white">
-                {gameState.targetScore || 100}
+              <span className="text-slate-400">Target Score:</span>
+              <span className="rounded bg-emerald-500/20 px-2 py-0.5 font-black text-emerald-300 border border-emerald-500/30">
+                {gameState.targetScore || targetScore || 100}
               </span>
             </div>
           </div>
 
-          {/* Player vs AI Scores Cards (2-Column Grid on Mobile for height fit!) */}
+          {/* Player vs AI Scores Cards (2-Column Grid on Mobile) */}
           <div className="grid grid-cols-2 gap-2 sm:gap-4">
             
             {/* Player Card */}
@@ -547,13 +615,13 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               {/* Dynamic Target Progress bar */}
               <div className="mt-2 sm:mt-3.5 space-y-0.5">
                 <div className="flex justify-between text-[9px] text-slate-400 font-bold">
-                  <span>Target</span>
-                  <span>{Math.round((gameState.p1Score / (gameState.targetScore || 100)) * 100)}%</span>
+                  <span>Target Progress</span>
+                  <span>{Math.round((gameState.p1Score / (gameState.targetScore || targetScore || 100)) * 100)}%</span>
                 </div>
                 <div className="h-1.5 sm:h-2.5 w-full overflow-hidden rounded-full bg-slate-950 border border-slate-800">
                   <div
                     className="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-500"
-                    style={{ width: `${Math.min(100, (gameState.p1Score / (gameState.targetScore || 100)) * 100)}%` }}
+                    style={{ width: `${Math.min(100, (gameState.p1Score / (gameState.targetScore || targetScore || 100)) * 100)}%` }}
                   />
                 </div>
               </div>
@@ -588,13 +656,13 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               {/* Dynamic Target Progress bar */}
               <div className="mt-2 sm:mt-3.5 space-y-0.5">
                 <div className="flex justify-between text-[9px] text-slate-400 font-bold">
-                  <span>Target</span>
-                  <span>{Math.round((gameState.p2Score / (gameState.targetScore || 100)) * 100)}%</span>
+                  <span>Target Progress</span>
+                  <span>{Math.round((gameState.p2Score / (gameState.targetScore || targetScore || 100)) * 100)}%</span>
                 </div>
                 <div className="h-1.5 sm:h-2.5 w-full overflow-hidden rounded-full bg-slate-950 border border-slate-800">
                   <div
                     className="h-full bg-gradient-to-r from-cyan-500 to-teal-300 transition-all duration-500"
-                    style={{ width: `${Math.min(100, (gameState.p2Score / (gameState.targetScore || 100)) * 100)}%` }}
+                    style={{ width: `${Math.min(100, (gameState.p2Score / (gameState.targetScore || targetScore || 100)) * 100)}%` }}
                   />
                 </div>
               </div>
@@ -602,7 +670,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
 
           </div>
 
-          {/* Dice & Action Center (Compact Padding for Mobile View) */}
+          {/* Dice & Action Center */}
           <div className="relative flex flex-col items-center justify-center rounded-2xl sm:rounded-3xl border border-slate-800 bg-slate-900/90 p-4 sm:p-8 shadow-2xl backdrop-blur-xl">
             
             {/* Animated Floating score indicator */}
@@ -619,14 +687,14 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               </div>
             </div>
 
-            {/* True 3D Rotating Cube Dice (Compact 85px size on mobile so it fits!) */}
+            {/* True 3D Rotating Cube Dice */}
             <Dice3D value={lastDice} isRolling={isRolling} size={85} />
 
             {/* Action Buttons */}
             <div className="mt-4 sm:mt-6 flex w-full max-w-sm gap-2 sm:gap-3">
               <button
                 onClick={handleRoll}
-                disabled={gameState.currentTurn !== 0 || isRolling || isAiThinking}
+                disabled={gameState.currentTurn !== 0 || isRolling || isAiThinking || gameState.status === 'COMPLETED'}
                 className="flex flex-1 items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 py-3 sm:py-4 text-xs sm:text-sm font-black text-slate-950 shadow-xl shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 transition disabled:opacity-40 scale-100 hover:scale-[1.02]"
               >
                 <Zap className="h-4 w-4 sm:h-5 sm:w-5 fill-slate-950" />
@@ -635,7 +703,7 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
 
               <button
                 onClick={handleHold}
-                disabled={gameState.currentTurn !== 0 || isRolling || isAiThinking || gameState.currentAccumulated === 0}
+                disabled={gameState.currentTurn !== 0 || isRolling || isAiThinking || gameState.currentAccumulated === 0 || gameState.status === 'COMPLETED'}
                 className="flex flex-1 items-center justify-center gap-1.5 sm:gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3 sm:py-4 text-xs sm:text-sm font-black text-white shadow-xl shadow-emerald-500/25 hover:from-emerald-400 hover:to-emerald-500 transition disabled:opacity-40 scale-100 hover:scale-[1.02]"
               >
                 <Award className="h-4 w-4 sm:h-5 sm:w-5" />
