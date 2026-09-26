@@ -519,7 +519,7 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
       )}
 
       {/* Game Over Victory Overlay Modal for PvP */}
-      {activeRoom && activeRoom.status === 'COMPLETED' && (
+      {activeRoom && activeRoom.status === 'COMPLETED' && !showWheelModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
           <div className="relative w-full max-w-md overflow-hidden rounded-3xl border-2 border-amber-400 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 p-6 sm:p-8 text-center shadow-2xl glow-gold">
             
