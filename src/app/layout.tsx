@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RollDice - Casino Dice Wagering Platform",
-  description: "Real money and free demo dice wagering platform with Flutterwave payment gateway and provably fair RNG.",
+  title: {
+    default: "Benix Games",
+    template: "%s | Benix Games",
+  },
+  description: "Benix Games - Provably fair casino dice wagering platform with instant mobile money deposits and payouts.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

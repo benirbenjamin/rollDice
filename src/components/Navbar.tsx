@@ -40,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenDeposit, onOpenWithd
             </div>
             <div>
               <div className="flex items-center gap-1">
-                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white">Roll<span className="text-amber-400">Dice</span></span>
+                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white">Benix<span className="text-amber-400">Games</span></span>
                 <span className="rounded bg-amber-500/20 px-1 py-0.5 text-[9px] font-bold text-amber-300 border border-amber-500/30">PRO</span>
               </div>
             </div>
