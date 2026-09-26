@@ -102,12 +102,10 @@ export const MultiplierWheelModal: React.FC<SpinWheelModalProps> = ({
         }
       }
 
-      // Calculate Rotation Angle to land on chosen sector
-      // 12 sectors = 30 deg per sector
-      const sectorAngle = 360 / WHEEL_SECTORS.length;
-      const extraSpins = 360 * 6; // 6 Full rotations
-      // Align top pointer (270 deg / -90 deg)
-      const targetAngle = extraSpins + (360 - targetTierIndex * sectorAngle) - sectorAngle / 2;
+      // Calculate exact Rotation Angle to land on chosen sector at 12 o'clock pointer (270 deg)
+      const sectorAngle = 360 / WHEEL_SECTORS.length; // 30 deg per sector
+      const extraSpins = 360 * 6; // 6 Full 360-degree rotations
+      const targetAngle = extraSpins + (255 - targetTierIndex * sectorAngle);
 
       setRotation(targetAngle);
 
