@@ -440,6 +440,8 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+        )}
+
         {/* Modals */}
         <DepositModal
           isOpen={isDepositOpen}
