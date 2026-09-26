@@ -54,15 +54,13 @@ export async function sendOtpEmail(email: string, type: 'LOGIN' | 'SIGNUP') {
       });
       sentStatus = true;
     } catch (err) {
-      console.warn('Resend email failed, fallback to dev response:', err);
-      devCodeMessage = ` (Dev OTP: ${otp})`;
+      console.warn('Resend email failed:', err);
     }
   } else {
-    console.log(`[DEV MODE OTP] Email: ${email} | Code: ${otp}`);
-    devCodeMessage = ` (Dev OTP: ${otp})`;
+    console.log(`[SECURE OTP STORED IN DB] Email: ${email}`);
   }
 
-  return { success: true, message: `OTP sent to ${email}${devCodeMessage}`, devOtp: otp };
+  return { success: true, message: `Verification code sent to ${email}` };
 }
 
 // Verify OTP

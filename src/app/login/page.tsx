@@ -17,7 +17,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
-  const [devOtpNotice, setDevOtpNotice] = useState<string | null>(null);
 
   // Send OTP
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -25,7 +24,6 @@ export default function LoginPage() {
     soundManager.playClick();
     setError(null);
     setInfoMsg(null);
-    setDevOtpNotice(null);
 
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email address');
@@ -53,9 +51,6 @@ export default function LoginPage() {
       }
 
       setInfoMsg(data.message || 'Verification code sent! Please check your email inbox.');
-      if (data.devOtp) {
-        setDevOtpNotice(`Dev Mode / Sandbox OTP Code: ${data.devOtp}`);
-      }
       setStep('OTP');
       soundManager.playHoldScore();
     } catch (err: any) {
@@ -142,12 +137,6 @@ export default function LoginPage() {
           <div className="mt-5 flex items-center gap-2 rounded-xl bg-emerald-950/60 p-3 text-xs text-emerald-300 border border-emerald-800/50">
             <CheckCircle className="h-4 w-4 shrink-0" />
             <span>{infoMsg}</span>
-          </div>
-        )}
-
-        {devOtpNotice && (
-          <div className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-2.5 text-center text-xs font-mono font-bold text-amber-300 shadow-inner">
-            ⚡ {devOtpNotice}
           </div>
         )}
 
