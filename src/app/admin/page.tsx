@@ -29,7 +29,7 @@ export default function AdminPage() {
 
   // Settings form state
   const [rakePercent, setRakePercent] = useState<string>('10');
-  const [minStake, setMinStake] = useState<string>('500');
+  const [minStake, setMinStake] = useState<string>('20');
   const [maxStake, setMaxStake] = useState<string>('100000');
   const [targetScore, setTargetScore] = useState<string>('100');
 
@@ -279,7 +279,7 @@ export default function AdminPage() {
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">Minimum Stake (RWF)</label>
               <input
                 type="number"
-                min="100"
+                min="1"
                 value={minStake}
                 onChange={(e) => setMinStake(e.target.value)}
                 className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-sm font-bold text-white focus:border-amber-400 focus:outline-none"
