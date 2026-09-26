@@ -15,12 +15,12 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({ user, onOpenDeposit, onOpenWithdraw }) => {
   const pathname = usePathname();
 
-  if (!user) return null;
+  const currentUser = user || { name: 'Player', role: 'USER' };
 
   const isActive = (path: string) => pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-slate-800/90 bg-slate-950/95 backdrop-blur-xl px-2 py-1.5 shadow-[0_-8px_25px_rgba(0,0,0,0.8)] pb-safe">
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-800/90 bg-slate-950/95 backdrop-blur-xl px-2 py-1.5 shadow-[0_-8px_25px_rgba(0,0,0,0.8)] pb-safe">
       <div className="flex items-center justify-around max-w-md mx-auto">
         
         {/* Dashboard Link */}
@@ -76,7 +76,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ user, onOpenDeposit, onOpe
         </button>
 
         {/* Admin or Profile */}
-        {user.role === 'ADMIN' ? (
+        {currentUser?.role === 'ADMIN' ? (
           <Link
             href="/admin"
             onClick={() => soundManager.playClick()}
@@ -90,7 +90,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ user, onOpenDeposit, onOpe
         ) : (
           <div className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400">
             <User className="h-5 w-5 text-slate-400" />
-            <span className="text-[10px] font-bold mt-0.5 truncate max-w-[45px]">{user.name?.split(' ')[0] || 'User'}</span>
+            <span className="text-[10px] font-bold mt-0.5 truncate max-w-[45px]">{currentUser?.name?.split(' ')[0] || 'User'}</span>
           </div>
         )}
 

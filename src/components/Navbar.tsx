@@ -91,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenDeposit, onOpenWithd
                 
                 <button
                   onClick={onOpenDeposit}
-                  className="hidden md:flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 ml-2 px-2 py-1 text-[11px] font-bold text-white transition"
+                  className="flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 ml-2 px-2 py-1 text-[11px] font-bold text-white transition"
                 >
                   <Plus className="h-3 w-3" />
                   <span>+ Deposit</span>
