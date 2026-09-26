@@ -123,6 +123,7 @@ async function initDatabase() {
           ('house_balance', '0.00'),
           ('min_stake', '20'),
           ('max_stake', '100000'),
+          ('min_withdraw', '10'),
           ('target_score', '300')
           ON CONFLICT (key) DO UPDATE SET value = '20' WHERE system_settings.key = 'min_stake' AND system_settings.value = '500';
         `);
@@ -201,6 +202,7 @@ async function initDatabase() {
         INSERT OR IGNORE INTO system_settings (key, value) VALUES ('house_balance', '0.00');
         INSERT OR REPLACE INTO system_settings (key, value) VALUES ('min_stake', '20');
         INSERT OR IGNORE INTO system_settings (key, value) VALUES ('max_stake', '100000');
+        INSERT OR IGNORE INTO system_settings (key, value) VALUES ('min_withdraw', '10');
         INSERT OR IGNORE INTO system_settings (key, value) VALUES ('target_score', '300');
       `);
     }

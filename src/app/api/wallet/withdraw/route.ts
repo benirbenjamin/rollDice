@@ -3,6 +3,16 @@ import { getCurrentUser } from '@/lib/auth';
 import { dbQuery, dbExecute } from '@/lib/db';
 import { initiateBankTransfer } from '@/lib/flutterwave';
 
+export async function GET() {
+  try {
+    const settingsRows = await dbQuery(`SELECT value FROM system_settings WHERE key = 'min_withdraw'`);
+    const minWithdraw = Number(settingsRows[0]?.value || 10);
+    return NextResponse.json({ minWithdraw });
+  } catch {
+    return NextResponse.json({ minWithdraw: 10 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const user = await getCurrentUser();
@@ -14,8 +24,11 @@ export async function POST(req: Request) {
     const withdrawAmount = Number(amount);
     const selectedCurrency = currency || 'RWF';
 
-    if (isNaN(withdrawAmount) || withdrawAmount < 1000) {
-      return NextResponse.json({ error: `Minimum withdrawal amount is ${selectedCurrency} 1,000` }, { status: 400 });
+    const settingsRows = await dbQuery(`SELECT value FROM system_settings WHERE key = 'min_withdraw'`);
+    const minWithdraw = Number(settingsRows[0]?.value || 10);
+
+    if (isNaN(withdrawAmount) || withdrawAmount < minWithdraw) {
+      return NextResponse.json({ error: `Minimum withdrawal amount is ${selectedCurrency} ${minWithdraw.toLocaleString()}` }, { status: 400 });
     }
 
     if (!account_bank || !account_number) {

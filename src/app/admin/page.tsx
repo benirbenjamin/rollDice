@@ -31,6 +31,7 @@ export default function AdminPage() {
   const [rakePercent, setRakePercent] = useState<string>('10');
   const [minStake, setMinStake] = useState<string>('20');
   const [maxStake, setMaxStake] = useState<string>('100000');
+  const [minWithdraw, setMinWithdraw] = useState<string>('10');
   const [targetScore, setTargetScore] = useState<string>('100');
 
   // Balance adjustment modal state
@@ -54,8 +55,9 @@ export default function AdminPage() {
 
       if (statsData.stats?.settings) {
         setRakePercent(statsData.stats.settings.house_rake_percent || '10');
-        setMinStake(statsData.stats.settings.min_stake || '500');
+        setMinStake(statsData.stats.settings.min_stake || '20');
         setMaxStake(statsData.stats.settings.max_stake || '100000');
+        setMinWithdraw(statsData.stats.settings.min_withdraw || '10');
         setTargetScore(statsData.stats.settings.target_score || '100');
       }
 
@@ -91,6 +93,7 @@ export default function AdminPage() {
           house_rake_percent: rakePercent,
           min_stake: minStake,
           max_stake: maxStake,
+          min_withdraw: minWithdraw,
           target_score: targetScore,
         }),
       });
@@ -262,7 +265,7 @@ export default function AdminPage() {
             <h3 className="text-base font-extrabold text-white">Dynamic Platform Configurations</h3>
           </div>
 
-          <form onSubmit={handleSaveSettings} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <form onSubmit={handleSaveSettings} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">House Rake % (Edge)</label>
               <input
@@ -298,6 +301,17 @@ export default function AdminPage() {
             </div>
 
             <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Min Withdrawal (RWF)</label>
+              <input
+                type="number"
+                min="1"
+                value={minWithdraw}
+                onChange={(e) => setMinWithdraw(e.target.value)}
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-sm font-bold text-emerald-400 focus:border-emerald-400 focus:outline-none"
+              />
+            </div>
+
+            <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">Target Winning Score</label>
               <input
                 type="number"
@@ -309,7 +323,7 @@ export default function AdminPage() {
               />
             </div>
 
-            <div className="sm:col-span-2 md:col-span-4 flex justify-end">
+            <div className="sm:col-span-2 md:col-span-5 flex justify-end">
               <button
                 type="submit"
                 className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-2.5 text-xs font-bold text-slate-950 shadow-md shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500 transition"

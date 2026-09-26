@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Building2, ShieldCheck, Zap, AlertCircle, Globe } from 'lucide-react';
 import { soundManager } from '@/lib/sound';
 
@@ -17,8 +17,22 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose, o
   const [bankCode, setBankCode] = useState<string>('RWF_MTN');
   const [accountNumber, setAccountNumber] = useState<string>('');
   const [accountName, setAccountName] = useState<string>('');
+  const [minWithdraw, setMinWithdraw] = useState<number>(10);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/wallet/withdraw')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.minWithdraw !== undefined) {
+            setMinWithdraw(Number(data.minWithdraw));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -31,8 +45,8 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose, o
 
     const withdrawVal = Number(amount);
 
-    if (isNaN(withdrawVal) || withdrawVal < 1000) {
-      setError(`Minimum withdrawal is ${currency} 1,000`);
+    if (isNaN(withdrawVal) || withdrawVal < minWithdraw) {
+      setError(`Minimum withdrawal is ${currency} ${minWithdraw.toLocaleString()}`);
       return;
     }
 
@@ -142,13 +156,16 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose, o
 
           {/* Amount */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Withdrawal Amount ({currency})</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+              <span>Withdrawal Amount ({currency})</span>
+              <span className="text-[10px] text-amber-400 font-bold">Min {currency} {minWithdraw.toLocaleString()}</span>
+            </label>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{currency}</span>
               <input
                 type="number"
-                min="1000"
-                placeholder="e.g. 5000"
+                min={minWithdraw}
+                placeholder={`Min ${minWithdraw} ${currency}...`}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2.5 pl-14 pr-4 text-sm font-semibold text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none"

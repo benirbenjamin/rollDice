@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { house_rake_percent, min_stake, max_stake, target_score } = await req.json();
+    const { house_rake_percent, min_stake, max_stake, min_withdraw, target_score } = await req.json();
 
     if (house_rake_percent !== undefined) {
       await dbExecute(
@@ -32,6 +32,14 @@ export async function POST(req: Request) {
         `INSERT INTO system_settings (key, value) VALUES ('max_stake', ?)
          ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
         [String(max_stake)]
+      );
+    }
+
+    if (min_withdraw !== undefined) {
+      await dbExecute(
+        `INSERT INTO system_settings (key, value) VALUES ('min_withdraw', ?)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        [String(min_withdraw)]
       );
     }
 
