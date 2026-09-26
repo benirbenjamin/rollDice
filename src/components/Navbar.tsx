@@ -88,14 +88,6 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenDeposit, onOpenWithd
                     RWF {Number(user.wallet_balance || 0).toLocaleString('en-US')}
                   </span>
                 </div>
-                
-                <button
-                  onClick={onOpenDeposit}
-                  className="hidden md:flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 ml-2 px-2 py-1 text-[11px] font-bold text-white transition"
-                >
-                  <Plus className="h-3 w-3" />
-                  <span>+ Deposit</span>
-                </button>
               </div>
 
               {/* Desktop User Info & Logout */}

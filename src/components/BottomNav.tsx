@@ -75,8 +75,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({ user, onOpenDeposit, onOpe
           <span className="text-[10px] font-bold mt-0.5">Withdraw</span>
         </button>
 
-        {/* Admin or Profile */}
-        {currentUser?.role === 'ADMIN' ? (
+        {/* Admin or Profile or Login */}
+        {!user || user?.isDemo ? (
+          <Link
+            href="/login"
+            onClick={() => soundManager.playClick()}
+            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition ${
+              isActive('/login') ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <User className="h-5 w-5" />
+            <span className="text-[10px] font-bold mt-0.5">Login</span>
+          </Link>
+        ) : currentUser?.role === 'ADMIN' ? (
           <Link
             href="/admin"
             onClick={() => soundManager.playClick()}

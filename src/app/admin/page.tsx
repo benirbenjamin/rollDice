@@ -19,6 +19,9 @@ import {
   Check,
 } from 'lucide-react';
 import { soundManager } from '@/lib/sound';
+import { BottomNav } from '@/components/BottomNav';
+import { DepositModal } from '@/components/DepositModal';
+import { WithdrawModal } from '@/components/WithdrawModal';
 
 export default function AdminPage() {
   const [data, setData] = useState<any>(null);
