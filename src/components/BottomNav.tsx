@@ -19,12 +19,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({ user, onOpenDeposit, onOpe
 
   React.useEffect(() => {
     console.log('🚀 [RollDice] Bottom Navigation Bar Loaded Successfully!', { user: currentUser });
+    console.warn('🚀 [RollDice] Bottom Navigation Bar is ACTIVE on this screen.');
   }, [currentUser]);
 
   const isActive = (path: string) => pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-slate-800/90 bg-slate-950/95 backdrop-blur-xl px-2 py-1.5 shadow-[0_-8px_25px_rgba(0,0,0,0.8)] pb-safe">
+    <div className="fixed bottom-0 left-0 right-0 z-[9999] block md:hidden border-t border-slate-800/90 bg-slate-950/95 backdrop-blur-xl px-2 py-2 shadow-[0_-8px_25px_rgba(0,0,0,0.9)]">
       <div className="flex items-center justify-around max-w-md mx-auto">
         
         {/* Dashboard Link */}
@@ -58,7 +59,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ user, onOpenDeposit, onOpe
               soundManager.playClick();
               onOpenDeposit();
             }}
-            className="flex h-13 w-13 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 p-0.5 shadow-xl shadow-emerald-500/40 glow-cyan scale-105 active:scale-95 transition"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 p-0.5 shadow-xl shadow-emerald-500/40 glow-cyan scale-105 active:scale-95 transition"
           >
             <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white font-black">
               <Plus className="h-6 w-6 stroke-[3]" />
