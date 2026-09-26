@@ -19,9 +19,6 @@ import {
   Check,
 } from 'lucide-react';
 import { soundManager } from '@/lib/sound';
-import { BottomNav } from '@/components/BottomNav';
-import { DepositModal } from '@/components/DepositModal';
-import { WithdrawModal } from '@/components/WithdrawModal';
 
 export default function AdminPage() {
   const [data, setData] = useState<any>(null);
@@ -441,34 +438,6 @@ export default function AdminPage() {
             </div>
           </div>
         )}
-
-        {/* Modals */}
-        <DepositModal
-          isOpen={isDepositOpen}
-          onClose={() => setIsDepositOpen(false)}
-          onSuccess={() => fetchAdminData()}
-          user={data?.user || { role: 'ADMIN' }}
-        />
-
-        <WithdrawModal
-          isOpen={isWithdrawOpen}
-          onClose={() => setIsWithdrawOpen(false)}
-          onSuccess={() => fetchAdminData()}
-          userBalance={data?.user?.wallet_balance || 0}
-        />
-
-        {/* Mobile Bottom Navigation Bar */}
-        <BottomNav
-          user={data?.user || { role: 'ADMIN', name: 'Admin' }}
-          onOpenDeposit={() => {
-            soundManager.playClick();
-            setIsDepositOpen(true);
-          }}
-          onOpenWithdraw={() => {
-            soundManager.playClick();
-            setIsWithdrawOpen(true);
-          }}
-        />
 
       </div>
     </main>
