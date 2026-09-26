@@ -17,7 +17,7 @@ export async function GET() {
 
     // Fetch user game history
     const games = await dbQuery(
-      `SELECT * FROM game_rooms WHERE (player1_id = ? OR player2_id = ?) AND status = 'COMPLETED' ORDER BY updated_at DESC LIMIT 15`,
+      `SELECT * FROM game_rooms WHERE (player1_id = ? OR player2_id = ?) AND status = 'COMPLETED' ORDER BY created_at DESC LIMIT 15`,
       [user.id, user.id]
     );
 

@@ -10,13 +10,13 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<any>({
-    totalMatches: 12,
-    wins: 8,
-    losses: 4,
-    winRate: 67,
-    totalWinnings: 24500,
-    totalWagered: 15000,
-    balance: 48600,
+    totalMatches: 0,
+    wins: 0,
+    losses: 0,
+    winRate: 0,
+    totalWinnings: 0,
+    totalWagered: 0,
+    balance: 0,
   });
   const [transactions, setTransactions] = useState<any[]>([]);
   const [games, setGames] = useState<any[]>([]);
