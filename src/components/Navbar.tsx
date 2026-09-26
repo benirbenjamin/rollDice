@@ -136,10 +136,17 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenDeposit, onOpenWithd
       {mobileMenuOpen && user && (
         <div className="lg:hidden border-t border-slate-800 bg-slate-950 p-4 space-y-3 shadow-2xl animate-in slide-in-from-top duration-200">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-            <div>
+            <Link
+              href="/dashboard"
+              onClick={() => {
+                soundManager.playClick();
+                setMobileMenuOpen(false);
+              }}
+              className="hover:opacity-80 transition"
+            >
               <p className="text-xs font-bold text-white">{user.name}</p>
               <p className="text-[10px] text-slate-400">{user.email}</p>
-            </div>
+            </Link>
             {user.role === 'ADMIN' && (
               <Link
                 href="/admin"

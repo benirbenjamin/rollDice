@@ -107,10 +107,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({ user, onOpenDeposit, onOpe
             <span className="text-[10px] font-bold mt-0.5">Admin</span>
           </Link>
         ) : (
-          <div className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400">
-            <User className="h-5 w-5 text-slate-400" />
+          <Link
+            href="/dashboard"
+            onClick={() => soundManager.playClick()}
+            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition ${
+              isActive('/dashboard') ? 'text-amber-400 font-black' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <User className="h-5 w-5" />
             <span className="text-[10px] font-bold mt-0.5 truncate max-w-[45px]">{currentUser?.name?.split(' ')[0] || 'User'}</span>
-          </div>
+          </Link>
         )}
 
       </div>
