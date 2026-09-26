@@ -3,10 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Navbar } from '@/components/Navbar';
-import { BottomNav } from '@/components/BottomNav';
-import { DepositModal } from '@/components/DepositModal';
-import { WithdrawModal } from '@/components/WithdrawModal';
 import { soundManager } from '@/lib/sound';
 import { Bot, Users, Trophy, Zap, TrendingUp, ShieldCheck, ArrowRight, Wallet, History, Sparkles, Play } from 'lucide-react';
 
@@ -80,21 +76,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] font-sans text-slate-100 flex flex-col">
-      <Navbar
-        user={user}
-        onOpenDeposit={() => {
-          soundManager.playClick();
-          setIsDepositOpen(true);
-        }}
-        onOpenWithdraw={() => {
-          soundManager.playClick();
-          setIsWithdrawOpen(true);
-        }}
-        onLogout={handleLogout}
-      />
-
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 pb-24 md:pb-8 sm:px-6 space-y-8">
+    <div className="w-full flex flex-col">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 space-y-8">
         
         {/* Welcome Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 sm:p-8 shadow-2xl">
@@ -297,34 +280,6 @@ export default function DashboardPage() {
         </div>
 
       </main>
-
-      {/* Modals */}
-      <DepositModal
-        isOpen={isDepositOpen}
-        onClose={() => setIsDepositOpen(false)}
-        onSuccess={handleBalanceUpdate}
-        user={user}
-      />
-
-      <WithdrawModal
-        isOpen={isWithdrawOpen}
-        onClose={() => setIsWithdrawOpen(false)}
-        onSuccess={handleBalanceUpdate}
-        userBalance={user?.wallet_balance || 0}
-      />
-
-      {/* Mobile Bottom Navigation Bar */}
-      <BottomNav
-        user={user}
-        onOpenDeposit={() => {
-          soundManager.playClick();
-          setIsDepositOpen(true);
-        }}
-        onOpenWithdraw={() => {
-          soundManager.playClick();
-          setIsWithdrawOpen(true);
-        }}
-      />
     </div>
   );
 }

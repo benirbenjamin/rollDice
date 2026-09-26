@@ -17,6 +17,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({ user, onOpenDeposit, onOpe
 
   const currentUser = user || { name: 'Player', role: 'USER' };
 
+  React.useEffect(() => {
+    console.log('🚀 [RollDice] Bottom Navigation Bar Loaded Successfully!', { user: currentUser });
+  }, [currentUser]);
+
   const isActive = (path: string) => pathname === path;
 
   return (

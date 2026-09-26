@@ -2,12 +2,8 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Navbar } from '@/components/Navbar';
-import { BottomNav } from '@/components/BottomNav';
 import { PvEGame } from '@/components/PvEGame';
 import { PvPGame } from '@/components/PvPGame';
-import { DepositModal } from '@/components/DepositModal';
-import { WithdrawModal } from '@/components/WithdrawModal';
 import { soundManager } from '@/lib/sound';
 import { Bot, Users, ArrowLeft, ShieldCheck, Sparkles } from 'lucide-react';
 
@@ -62,21 +58,8 @@ function PlayArenaContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] font-sans text-slate-100 flex flex-col">
-      <Navbar
-        user={user}
-        onOpenDeposit={() => {
-          soundManager.playClick();
-          setIsDepositOpen(true);
-        }}
-        onOpenWithdraw={() => {
-          soundManager.playClick();
-          setIsWithdrawOpen(true);
-        }}
-        onLogout={handleLogout}
-      />
-
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 pb-24 md:pb-6 sm:px-6 space-y-6">
+    <div className="w-full flex flex-col">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 space-y-6">
         
         {/* Top Arena Navigation Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-4 shadow-xl">
@@ -150,33 +133,6 @@ function PlayArenaContent() {
         </div>
 
       </main>
-
-      <DepositModal
-        isOpen={isDepositOpen}
-        onClose={() => setIsDepositOpen(false)}
-        onSuccess={handleBalanceUpdate}
-        user={user}
-      />
-
-      <WithdrawModal
-        isOpen={isWithdrawOpen}
-        onClose={() => setIsWithdrawOpen(false)}
-        onSuccess={handleBalanceUpdate}
-        userBalance={user?.wallet_balance || 0}
-      />
-
-      {/* Mobile Bottom Navigation Bar */}
-      <BottomNav
-        user={user}
-        onOpenDeposit={() => {
-          soundManager.playClick();
-          setIsDepositOpen(true);
-        }}
-        onOpenWithdraw={() => {
-          soundManager.playClick();
-          setIsWithdrawOpen(true);
-        }}
-      />
     </div>
   );
 }

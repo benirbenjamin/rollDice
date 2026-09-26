@@ -2,10 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Navbar } from '@/components/Navbar';
-import { BottomNav } from '@/components/BottomNav';
-import { DepositModal } from '@/components/DepositModal';
-import { WithdrawModal } from '@/components/WithdrawModal';
 import { PvEGame } from '@/components/PvEGame';
 import { PvPGame } from '@/components/PvPGame';
 import { soundManager } from '@/lib/sound';
@@ -90,23 +86,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] font-sans text-slate-100 flex flex-col">
-      
-      {/* Top Navbar */}
-      <Navbar
-        user={user}
-        onOpenDeposit={() => {
-          soundManager.playClick();
-          setIsDepositOpen(true);
-        }}
-        onOpenWithdraw={() => {
-          soundManager.playClick();
-          setIsWithdrawOpen(true);
-        }}
-        onLogout={handleLogout}
-      />
-
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 pb-24 md:pb-6 sm:px-6 space-y-6">
+    <div className="w-full flex flex-col">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 space-y-6">
         
         {/* Mode Selector & Quick Action Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-4 shadow-xl">
@@ -260,35 +241,6 @@ export default function Home() {
           </p>
         </div>
       </footer>
-
-      {/* Modals */}
-      <DepositModal
-        isOpen={isDepositOpen}
-        onClose={() => setIsDepositOpen(false)}
-        onSuccess={handleBalanceUpdate}
-        user={user}
-      />
-
-      <WithdrawModal
-        isOpen={isWithdrawOpen}
-        onClose={() => setIsWithdrawOpen(false)}
-        onSuccess={handleBalanceUpdate}
-        userBalance={user?.wallet_balance || 0}
-      />
-
-      {/* Mobile Bottom Navigation Bar with Deposit */}
-      <BottomNav
-        user={user}
-        onOpenDeposit={() => {
-          soundManager.playClick();
-          setIsDepositOpen(true);
-        }}
-        onOpenWithdraw={() => {
-          soundManager.playClick();
-          setIsWithdrawOpen(true);
-        }}
-      />
-
     </div>
   );
 }
