@@ -253,10 +253,7 @@ export default function LoginPage() {
 
             <button
               type="button"
-              onClick={() => {
-                setStep('FORM');
-                setDevOtpNotice(null);
-              }}
+              onClick={() => setStep('FORM')}
               className="w-full text-center text-xs text-slate-400 hover:text-white"
             >
               Back to {authMode === 'LOGIN' ? 'Login' : 'Registration'}
