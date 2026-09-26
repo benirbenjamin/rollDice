@@ -72,10 +72,10 @@ export async function POST(req: Request) {
         [aiScore, roomId]
       );
 
-      await dbExecute(
-        `UPDATE system_settings SET value = CAST(CAST(value AS NUMERIC) + ? AS TEXT) WHERE key = 'house_balance'`,
-        [houseProfit]
-      );
+      const houseRows = await dbQuery(`SELECT value FROM system_settings WHERE key = 'house_balance'`);
+      const currentHouseBal = Number(houseRows[0]?.value || 0);
+      const newHouseBal = (currentHouseBal + houseProfit).toFixed(2);
+      await dbExecute(`UPDATE system_settings SET value = ? WHERE key = 'house_balance'`, [newHouseBal]);
 
       const updatedUser = await dbQuery(`SELECT wallet_balance FROM users WHERE id = ?`, [user.id]);
 

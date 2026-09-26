@@ -124,6 +124,13 @@ export const MultiplierWheelModal: React.FC<SpinWheelModalProps> = ({
           label,
         });
 
+        if (isDemo && payoutDifference !== 0) {
+          const saved = localStorage.getItem('rolldice_demo_balance');
+          const curBal = saved !== null ? Number(saved) : 10000;
+          const newBal = Math.max(0, curBal + payoutDifference);
+          onBalanceUpdate(newBal);
+        }
+
         if (outcomeMultiplier >= 1.5) {
           soundManager.playVictory();
           confetti({ particleCount: 300, spread: 120, origin: { y: 0.5 } });

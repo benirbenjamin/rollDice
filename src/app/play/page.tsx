@@ -7,55 +7,16 @@ import { PvPGame } from '@/components/PvPGame';
 import { soundManager } from '@/lib/sound';
 import { Bot, Users, ArrowLeft, ShieldCheck, Sparkles } from 'lucide-react';
 
+import { useUser } from '@/context/UserContext';
+
 function PlayArenaContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialMode = searchParams.get('mode') === 'pvp' ? 'PVP' : 'PVE';
 
+  const { user, updateBalance } = useUser();
   const [activeTab, setActiveTab] = useState<'PVE' | 'PVP'>(initialMode);
-  const [user, setUser] = useState<any>(null);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
-  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/auth/me');
-        const data = await res.json();
-        if (res.ok && data.user) {
-          setUser(data.user);
-        } else {
-          setUser({
-            id: 'demo_guest_' + Date.now(),
-            name: 'Demo Guest',
-            email: 'demo@rolldice.app',
-            wallet_balance: 10000,
-            isDemo: true,
-          });
-        }
-      } catch {
-        setUser({
-          id: 'demo_guest_' + Date.now(),
-          name: 'Demo Guest',
-          email: 'demo@rolldice.app',
-          wallet_balance: 10000,
-          isDemo: true,
-        });
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  const handleLogout = async () => {
-    soundManager.playClick();
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
-  };
-
-  const handleBalanceUpdate = (newBalance: number) => {
-    setUser((prev: any) => (prev ? { ...prev, wallet_balance: newBalance } : null));
-  };
 
   return (
     <div className="w-full flex flex-col">
@@ -120,13 +81,13 @@ function PlayArenaContent() {
           {activeTab === 'PVE' ? (
             <PvEGame
               user={user}
-              onBalanceUpdate={handleBalanceUpdate}
+              onBalanceUpdate={updateBalance}
               onOpenDeposit={() => setIsDepositOpen(true)}
             />
           ) : (
             <PvPGame
               user={user}
-              onBalanceUpdate={handleBalanceUpdate}
+              onBalanceUpdate={updateBalance}
               onOpenDeposit={() => setIsDepositOpen(true)}
             />
           )}

@@ -177,10 +177,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         await dbExecute(`UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?`, [winnerPayout, winnerId]);
 
         // Update house revenue balance
-        await dbExecute(
-          `UPDATE system_settings SET value = CAST(CAST(value AS NUMERIC) + ? AS TEXT) WHERE key = 'house_balance'`,
-          [houseRakeAmount]
-        );
+        const houseRows = await dbQuery(`SELECT value FROM system_settings WHERE key = 'house_balance'`);
+        const currentHouseBal = Number(houseRows[0]?.value || 0);
+        const newHouseBal = (currentHouseBal + houseRakeAmount).toFixed(2);
+        await dbExecute(`UPDATE system_settings SET value = ? WHERE key = 'house_balance'`, [newHouseBal]);
 
         // Record payout transaction
         await dbExecute(

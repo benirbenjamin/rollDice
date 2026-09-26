@@ -57,6 +57,14 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
             if (data.room.winner_id === user?.id) {
               soundManager.playVictory();
               confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+              fetch('/api/auth/me')
+                .then((r) => r.json())
+                .then((uData) => {
+                  if (uData.user?.wallet_balance !== undefined) {
+                    onBalanceUpdate(Number(uData.user.wallet_balance));
+                  }
+                })
+                .catch(() => {});
             }
           }
           setActiveRoom(data.room);

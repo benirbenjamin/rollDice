@@ -6,9 +6,11 @@ import { useRouter } from 'next/navigation';
 import { soundManager } from '@/lib/sound';
 import { Bot, Users, Trophy, Zap, TrendingUp, ShieldCheck, ArrowRight, Wallet, History, Sparkles, Play } from 'lucide-react';
 
+import { useUser } from '@/context/UserContext';
+
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { user } = useUser();
   const [stats, setStats] = useState<any>({
     totalMatches: 0,
     wins: 0,
@@ -21,17 +23,11 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [games, setGames] = useState<any[]>([]);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
-  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
 
   useEffect(() => {
-    const loadDashboardData = async () => {
+    const loadAnalyticsData = async () => {
       try {
-        const userRes = await fetch('/api/auth/me');
-        const userData = await userRes.json();
-
-        if (userRes.ok && userData.user) {
-          setUser(userData.user);
-
+        if (user && !user.isDemo) {
           const analyticsRes = await fetch('/api/user/analytics');
           const analyticsData = await analyticsRes.json();
 
@@ -40,40 +36,12 @@ export default function DashboardPage() {
             setTransactions(analyticsData.recentTransactions || []);
             setGames(analyticsData.recentGames || []);
           }
-        } else {
-          // Demo Mode for Guests
-          setUser({
-            id: 'demo_guest',
-            name: 'Demo Player',
-            email: 'demo@rolldice.app',
-            wallet_balance: 10000,
-            isDemo: true,
-          });
         }
-      } catch {
-        setUser({
-          id: 'demo_guest',
-          name: 'Demo Player',
-          email: 'demo@rolldice.app',
-          wallet_balance: 10000,
-          isDemo: true,
-        });
-      }
+      } catch {}
     };
 
-    loadDashboardData();
-  }, []);
-
-  const handleLogout = async () => {
-    soundManager.playClick();
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
-  };
-
-  const handleBalanceUpdate = (newBalance: number) => {
-    setUser((prev: any) => (prev ? { ...prev, wallet_balance: newBalance } : null));
-    setStats((prev: any) => ({ ...prev, balance: newBalance }));
-  };
+    loadAnalyticsData();
+  }, [user]);
 
   return (
     <div className="w-full flex flex-col">

@@ -1,66 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
 import { DepositModal } from '@/components/DepositModal';
 import { WithdrawModal } from '@/components/WithdrawModal';
 import { soundManager } from '@/lib/sound';
+import { useUser } from '@/context/UserContext';
 
 interface AppShellProps {
   children: React.ReactNode;
 }
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
-  const [user, setUser] = useState<any>(null);
+  const { user, updateBalance, logout } = useUser();
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
-
-  const fetchUser = async () => {
-    try {
-      const res = await fetch('/api/auth/me');
-      const data = await res.json();
-      if (res.ok && data.user) {
-        setUser(data.user);
-      } else {
-        setUser({
-          id: 'demo_guest',
-          name: 'Demo Player',
-          email: 'demo@rolldice.app',
-          wallet_balance: 10000,
-          isDemo: true,
-        });
-      }
-    } catch {
-      setUser({
-        id: 'demo_guest',
-        name: 'Demo Player',
-        email: 'demo@rolldice.app',
-        wallet_balance: 10000,
-        isDemo: true,
-      });
-    }
-  };
-
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
-  const handleLogout = async () => {
-    soundManager.playClick();
-    await fetch('/api/auth/logout', { method: 'POST' });
-    setUser({
-      id: 'demo_guest',
-      name: 'Demo Player',
-      email: 'demo@rolldice.app',
-      wallet_balance: 10000,
-      isDemo: true,
-    });
-  };
-
-  const handleBalanceUpdate = (newBalance: number) => {
-    setUser((prev: any) => (prev ? { ...prev, wallet_balance: newBalance } : null));
-  };
 
   return (
     <div className="min-h-screen bg-[#0b0f19] font-sans text-slate-100 flex flex-col">
@@ -75,7 +30,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           soundManager.playClick();
           setIsWithdrawOpen(true);
         }}
-        onLogout={handleLogout}
+        onLogout={logout}
       />
 
       {/* Main Page Content with bottom padding on mobile for BottomNav */}
@@ -87,14 +42,14 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       <DepositModal
         isOpen={isDepositOpen}
         onClose={() => setIsDepositOpen(false)}
-        onSuccess={handleBalanceUpdate}
+        onSuccess={updateBalance}
         user={user}
       />
 
       <WithdrawModal
         isOpen={isWithdrawOpen}
         onClose={() => setIsWithdrawOpen(false)}
-        onSuccess={handleBalanceUpdate}
+        onSuccess={updateBalance}
         userBalance={user?.wallet_balance || 0}
       />
 

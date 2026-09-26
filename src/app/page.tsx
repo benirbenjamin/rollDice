@@ -7,82 +7,18 @@ import { PvPGame } from '@/components/PvPGame';
 import { soundManager } from '@/lib/sound';
 import { Bot, Users, ShieldCheck, HelpCircle, ArrowRight, PlayCircle, Sparkles, Flame } from 'lucide-react';
 
+import { useUser } from '@/context/UserContext';
+
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const { user, updateBalance, setDemoMode } = useUser();
+  const isDemoMode = !!user?.isDemo;
   const [activeTab, setActiveTab] = useState<'PVE' | 'PVP'>('PVE');
   const [isDepositOpen, setIsDepositOpen] = useState(false);
-  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
-
-  // Fetch logged in user profile
-  const fetchUser = async () => {
-    try {
-      const res = await fetch('/api/auth/me');
-      const data = await res.json();
-      if (res.ok && data.user) {
-        setUser(data.user);
-        setIsDemoMode(false);
-      } else {
-        // Default guest user to demo mode if not logged in
-        setUser({
-          id: 'demo_guest_' + Date.now(),
-          name: 'Demo Guest',
-          email: 'demo@rolldice.app',
-          wallet_balance: 10000,
-          isDemo: true,
-        });
-        setIsDemoMode(true);
-      }
-    } catch {
-      setUser({
-        id: 'demo_guest_' + Date.now(),
-        name: 'Demo Guest',
-        email: 'demo@rolldice.app',
-        wallet_balance: 10000,
-        isDemo: true,
-      });
-      setIsDemoMode(true);
-    }
-  };
-
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
-  const handleLogout = async () => {
-    soundManager.playClick();
-    await fetch('/api/auth/logout', { method: 'POST' });
-    setUser({
-      id: 'demo_guest_' + Date.now(),
-      name: 'Demo Guest',
-      email: 'demo@rolldice.app',
-      wallet_balance: 10000,
-      isDemo: true,
-    });
-    setIsDemoMode(true);
-  };
 
   const handleToggleDemo = () => {
     soundManager.playClick();
-    if (isDemoMode) {
-      // Switch to Real mode if user is logged in
-      fetchUser();
-    } else {
-      // Enable Demo mode
-      setIsDemoMode(true);
-      setUser({
-        id: 'demo_guest_' + Date.now(),
-        name: 'Demo Guest',
-        email: 'demo@rolldice.app',
-        wallet_balance: 10000,
-        isDemo: true,
-      });
-    }
-  };
-
-  const handleBalanceUpdate = (newBalance: number) => {
-    setUser((prev: any) => (prev ? { ...prev, wallet_balance: newBalance } : null));
+    setDemoMode(!isDemoMode);
   };
 
   return (
@@ -215,13 +151,13 @@ export default function Home() {
           {activeTab === 'PVE' ? (
             <PvEGame
               user={user}
-              onBalanceUpdate={handleBalanceUpdate}
+              onBalanceUpdate={updateBalance}
               onOpenDeposit={() => setIsDepositOpen(true)}
             />
           ) : (
             <PvPGame
               user={user}
-              onBalanceUpdate={handleBalanceUpdate}
+              onBalanceUpdate={updateBalance}
               onOpenDeposit={() => setIsDepositOpen(true)}
             />
           )}
