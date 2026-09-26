@@ -8,6 +8,7 @@ import { soundManager } from '@/lib/sound';
 import { Bot, Users, ShieldCheck, HelpCircle, ArrowRight, PlayCircle, Sparkles, Flame } from 'lucide-react';
 
 import { useUser } from '@/context/UserContext';
+import { FooterInstallButton } from '@/components/FooterInstallButton';
 
 export default function Home() {
   const { user, updateBalance, setDemoMode } = useUser();
@@ -168,9 +169,10 @@ export default function Home() {
       {/* Footer */}
       <footer className="mt-12 border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500">
         <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span className="font-bold text-slate-400">RollDice</span>
             <span>&copy; 2026. All Rights Reserved.</span>
+            <FooterInstallButton />
           </div>
           <p className="text-[11px] text-slate-600">
             Automated Flutterwave Deposit & Withdrawal Gateway &bull; Provably Fair RNG
