@@ -39,6 +39,8 @@ export default function AdminPage() {
   // Balance adjustment modal state
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [adjAmount, setAdjAmount] = useState<string>('');
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
 
   const fetchAdminData = async () => {
     setLoading(true);
@@ -438,7 +440,33 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
-        )}
+        {/* Modals */}
+        <DepositModal
+          isOpen={isDepositOpen}
+          onClose={() => setIsDepositOpen(false)}
+          onSuccess={() => fetchAdminData()}
+          user={data?.user || { role: 'ADMIN' }}
+        />
+
+        <WithdrawModal
+          isOpen={isWithdrawOpen}
+          onClose={() => setIsWithdrawOpen(false)}
+          onSuccess={() => fetchAdminData()}
+          userBalance={data?.user?.wallet_balance || 0}
+        />
+
+        {/* Mobile Bottom Navigation Bar */}
+        <BottomNav
+          user={data?.user || { role: 'ADMIN', name: 'Admin' }}
+          onOpenDeposit={() => {
+            soundManager.playClick();
+            setIsDepositOpen(true);
+          }}
+          onOpenWithdraw={() => {
+            soundManager.playClick();
+            setIsWithdrawOpen(true);
+          }}
+        />
 
       </div>
     </main>
