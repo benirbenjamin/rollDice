@@ -25,7 +25,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({ user, onOpenDeposit, onOpe
   const isActive = (path: string) => pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[9999] block md:hidden border-t border-slate-800/90 bg-slate-950/95 backdrop-blur-xl px-2 py-2 shadow-[0_-8px_25px_rgba(0,0,0,0.9)]">
+    <div
+      style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 999999 }}
+      className="block md:hidden border-t border-slate-800/90 bg-slate-950/95 backdrop-blur-xl px-2 py-2 shadow-[0_-8px_25px_rgba(0,0,0,0.9)]"
+    >
       <div className="flex items-center justify-around max-w-md mx-auto">
         
         {/* Dashboard Link */}
