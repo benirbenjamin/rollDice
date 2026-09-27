@@ -87,7 +87,7 @@ export function createSessionToken(user: UserSession): string {
       role: user.role,
     },
     JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: '30d' }
   );
 }
 

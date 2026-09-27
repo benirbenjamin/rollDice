@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, KeyRound, ShieldCheck, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
 import { soundManager } from '@/lib/sound';
+import { useUser } from '@/context/UserContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading: userLoading, fetchUser } = useUser();
   const [authMode, setAuthMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -17,6 +19,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
+
+  // If user is already logged in, redirect directly to Dashboard
+  useEffect(() => {
+    if (!userLoading && user && !user.isDemo) {
+      router.replace('/dashboard');
+    }
+  }, [user, userLoading, router]);
 
   // Send OTP
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -87,8 +96,8 @@ export default function LoginPage() {
       }
 
       soundManager.playVictory();
-      router.push('/');
-      router.refresh();
+      await fetchUser();
+      router.replace('/dashboard');
     } catch (err: any) {
       setError(err.message);
     } finally {
