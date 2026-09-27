@@ -56,8 +56,13 @@ async function initDatabase() {
             wallet_balance NUMERIC(12, 2) DEFAULT 0.00,
             is_verified BOOLEAN DEFAULT FALSE,
             status VARCHAR(20) DEFAULT 'ACTIVE',
+            last_withdraw_method VARCHAR(50),
+            last_withdraw_account VARCHAR(100),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           );
+
+          ALTER TABLE users ADD COLUMN IF NOT EXISTS last_withdraw_method VARCHAR(50);
+          ALTER TABLE users ADD COLUMN IF NOT EXISTS last_withdraw_account VARCHAR(100);
 
           CREATE TABLE IF NOT EXISTS otp_codes (
             id VARCHAR(64) PRIMARY KEY,
@@ -140,6 +145,8 @@ async function initDatabase() {
           wallet_balance REAL DEFAULT 0.00,
           is_verified INTEGER DEFAULT 0,
           status TEXT DEFAULT 'ACTIVE',
+          last_withdraw_method TEXT,
+          last_withdraw_account TEXT,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -205,6 +212,9 @@ async function initDatabase() {
         INSERT OR IGNORE INTO system_settings (key, value) VALUES ('min_withdraw', '10');
         INSERT OR IGNORE INTO system_settings (key, value) VALUES ('target_score', '300');
       `);
+
+      try { await sqliteDb.exec('ALTER TABLE users ADD COLUMN last_withdraw_method TEXT;'); } catch {}
+      try { await sqliteDb.exec('ALTER TABLE users ADD COLUMN last_withdraw_account TEXT;'); } catch {}
     }
   } catch (error) {
     console.error('Failed to auto-create database tables:', error);

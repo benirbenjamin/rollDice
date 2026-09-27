@@ -9,15 +9,22 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Fetch user profile info including last withdrawal preferences
+    const userRows = await dbQuery(
+      `SELECT id, name, email, role, wallet_balance, is_verified, status, last_withdraw_method, last_withdraw_account, created_at FROM users WHERE id = ?`,
+      [user.id]
+    );
+    const userInfo = userRows[0] || user;
+
     // Fetch transactions
     const txs = await dbQuery(
-      `SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 10`,
+      `SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 100`,
       [user.id]
     );
 
     // Fetch user game history
     const games = await dbQuery(
-      `SELECT * FROM game_rooms WHERE (player1_id = ? OR player2_id = ?) AND status = 'COMPLETED' ORDER BY created_at DESC LIMIT 15`,
+      `SELECT * FROM game_rooms WHERE (player1_id = ? OR player2_id = ?) AND status = 'COMPLETED' ORDER BY created_at DESC LIMIT 50`,
       [user.id, user.id]
     );
 
@@ -31,7 +38,20 @@ export async function GET() {
       totalWagered += stake;
       if (game.winner_id === user.id) {
         wins += 1;
-        totalWinnings += stake * 1.8; // Approx pot win
+        totalWinnings += stake * 1.8;
+      }
+    });
+
+    // Calculate Deposit & Withdrawal sums
+    let totalDeposited = 0;
+    let totalWithdrawn = 0;
+
+    txs.forEach((tx: any) => {
+      const amt = Number(tx.amount || 0);
+      if (tx.type === 'DEPOSIT' && tx.status === 'COMPLETED') {
+        totalDeposited += amt;
+      } else if (tx.type === 'WITHDRAWAL' && (tx.status === 'COMPLETED' || tx.status === 'APPROVED' || tx.status === 'PENDING')) {
+        totalWithdrawn += amt;
       }
     });
 
@@ -39,6 +59,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
+      user: userInfo,
       stats: {
         totalMatches,
         wins,
@@ -46,7 +67,9 @@ export async function GET() {
         winRate,
         totalWinnings,
         totalWagered,
-        balance: user.wallet_balance,
+        totalDeposited,
+        totalWithdrawn,
+        balance: Number(userInfo.wallet_balance || 0),
       },
       recentTransactions: txs,
       recentGames: games,
