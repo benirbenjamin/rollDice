@@ -150,6 +150,48 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
     }
   }, [gameState?.currentTurn, gameState?.id, gameState?.status, isAiThinking, user?.isDemo]);
 
+  // Cancel active game and refund stake
+  const handleCancelGame = async () => {
+    soundManager.playClick();
+    if (!gameState || gameState.status === 'COMPLETED') return;
+
+    if (user?.isDemo) {
+      onBalanceUpdate(user.wallet_balance + gameState.stake);
+      setGameState(null);
+    } else {
+      try {
+        const res = await fetch('/api/game/refund', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roomId: gameState.id }),
+        });
+        const data = await res.json();
+        if (data.newBalance !== undefined) {
+          onBalanceUpdate(data.newBalance);
+        }
+      } catch (err: any) {
+        console.error('Cancel game error:', err);
+      } finally {
+        setGameState(null);
+      }
+    }
+  };
+
+  // Watch for window refresh / leave during active match to auto-trigger beacon refund
+  useEffect(() => {
+    if (!gameState || gameState.status !== 'ACTIVE' || user?.isDemo) return;
+
+    const handleBeforeUnload = () => {
+      const data = JSON.stringify({ roomId: gameState.id });
+      navigator.sendBeacon('/api/game/refund', data);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [gameState, user?.isDemo]);
+
   // Trigger floating praise banner
   const triggerPraise = (text: string, color: string) => {
     setPraiseBanner({ text, color });
@@ -643,11 +685,20 @@ export const PvEGame: React.FC<PvEGameProps> = ({ user, onBalanceUpdate, onOpenD
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 text-[11px] sm:text-xs">
-              <span className="text-slate-400">Target Score:</span>
-              <span className="rounded bg-emerald-500/20 px-2 py-0.5 font-black text-emerald-300 border border-emerald-500/30">
-                {gameState.targetScore || targetScore || 100}
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs">
+                <span className="text-slate-400">Target:</span>
+                <span className="rounded bg-emerald-500/20 px-2 py-0.5 font-black text-emerald-300 border border-emerald-500/30">
+                  {gameState.targetScore || targetScore || 100}
+                </span>
+              </div>
+
+              <button
+                onClick={handleCancelGame}
+                className="rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 text-[11px] font-semibold text-slate-400 hover:text-white hover:border-red-800/80 hover:bg-red-950/40 transition"
+              >
+                Exit & Refund 🔄
+              </button>
             </div>
           </div>
 

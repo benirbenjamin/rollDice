@@ -75,6 +75,41 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
     return () => clearInterval(pollInterval);
   }, [activeRoom, user]);
 
+  const handleExitRoom = async () => {
+    soundManager.playClick();
+    if (!activeRoom) return;
+
+    if (activeRoom.status !== 'COMPLETED') {
+      try {
+        const res = await fetch('/api/game/refund', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roomId: activeRoom.id }),
+        });
+        const data = await res.json();
+        if (data.newBalance !== undefined) {
+          onBalanceUpdate(data.newBalance);
+        }
+      } catch {}
+    }
+    setActiveRoom(null);
+  };
+
+  // Watch for window refresh / leave during active or waiting room
+  useEffect(() => {
+    if (!activeRoom || activeRoom.status === 'COMPLETED') return;
+
+    const handleBeforeUnload = () => {
+      const data = JSON.stringify({ roomId: activeRoom.id });
+      navigator.sendBeacon('/api/game/refund', data);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [activeRoom]);
+
   // Create room
   const handleCreateRoom = async () => {
     soundManager.playClick();
@@ -412,10 +447,10 @@ export const PvPGame: React.FC<PvPGameProps> = ({ user, onBalanceUpdate, onOpenD
             </div>
 
             <button
-              onClick={() => setActiveRoom(null)}
-              className="rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 text-[11px] font-semibold text-slate-400 hover:text-white"
+              onClick={handleExitRoom}
+              className="rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 text-[11px] font-semibold text-slate-400 hover:text-white hover:border-red-800/80 hover:bg-red-950/40 transition"
             >
-              Exit Arena
+              {activeRoom.status === 'COMPLETED' ? 'Exit Arena' : 'Exit & Refund 🔄'}
             </button>
           </div>
 

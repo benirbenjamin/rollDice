@@ -38,6 +38,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUser = async () => {
     try {
       setLoading(true);
+      // Auto-refund any abandoned incomplete active games first
+      try {
+        await fetch('/api/game/refund', { method: 'POST' });
+      } catch {}
+
       const res = await fetch('/api/auth/me');
       const data = await res.json();
       if (res.ok && data.user) {
