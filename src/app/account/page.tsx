@@ -21,6 +21,7 @@ import {
   AlertCircle,
   UserCheck,
   CreditCard,
+  ArrowDownLeft,
 } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { soundManager } from '@/lib/sound';
@@ -30,7 +31,7 @@ export default function AccountPage() {
   const { user: authUser, loading: authLoading } = useUser();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'WITHDRAWALS' | 'TRANSACTIONS' | 'GAMES'>('WITHDRAWALS');
+  const [activeTab, setActiveTab] = useState<'DEPOSITS' | 'WITHDRAWALS' | 'TRANSACTIONS' | 'GAMES'>('DEPOSITS');
 
   const fetchAccountData = async () => {
     setLoading(true);
@@ -42,7 +43,7 @@ export default function AccountPage() {
       }
     } catch (err) {
       console.error('Failed to load account details:', err);
-    } fontinally: {
+    } finally {
       setLoading(false);
     }
   };
@@ -73,7 +74,8 @@ export default function AccountPage() {
   const transactions: any[] = data?.recentTransactions || [];
   const games: any[] = data?.recentGames || [];
 
-  // Filter withdrawals only
+  // Categorize transaction types
+  const deposits = transactions.filter((t) => t.type === 'DEPOSIT');
   const withdrawals = transactions.filter((t) => t.type === 'WITHDRAWAL');
 
   const renderStatusBadge = (status: string) => {
@@ -90,7 +92,7 @@ export default function AccountPage() {
         return (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[11px] font-bold text-amber-300 border border-amber-500/30 animate-pulse">
             <Clock className="h-3 w-3" />
-            Pending Approval
+            Pending Verification
           </span>
         );
       case 'REJECTED':
@@ -98,7 +100,7 @@ export default function AccountPage() {
         return (
           <span className="inline-flex items-center gap-1 rounded-full bg-red-500/20 px-2.5 py-0.5 text-[11px] font-bold text-red-400 border border-red-500/30">
             <XCircle className="h-3 w-3" />
-            Rejected & Refunded
+            Failed / Cancelled
           </span>
         );
       default:
@@ -186,9 +188,9 @@ export default function AccountPage() {
           <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
             <div className="flex items-center justify-between text-slate-400 mb-1">
               <span className="text-[11px] font-bold">Total Deposited</span>
-              <Plus className="h-4 w-4 text-emerald-400" />
+              <ArrowDownLeft className="h-4 w-4 text-emerald-400" />
             </div>
-            <div className="text-lg font-black text-white">
+            <div className="text-lg font-black text-emerald-400">
               RWF {Number(stats.totalDeposited || 0).toLocaleString()}
             </div>
           </div>
@@ -233,6 +235,21 @@ export default function AccountPage() {
             <button
               onClick={() => {
                 soundManager.playClick();
+                setActiveTab('DEPOSITS');
+              }}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
+                activeTab === 'DEPOSITS'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <ArrowDownLeft className="h-4 w-4 text-emerald-400" />
+              Deposit History ({deposits.length})
+            </button>
+
+            <button
+              onClick={() => {
+                soundManager.playClick();
                 setActiveTab('WITHDRAWALS');
               }}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
@@ -252,12 +269,12 @@ export default function AccountPage() {
               }}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
                 activeTab === 'TRANSACTIONS'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
                   : 'text-slate-400 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <History className="h-4 w-4 text-emerald-400" />
-              All Transactions ({transactions.length})
+              <History className="h-4 w-4 text-cyan-400" />
+              All Activity ({transactions.length})
             </button>
 
             <button
@@ -267,16 +284,67 @@ export default function AccountPage() {
               }}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
                 activeTab === 'GAMES'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                   : 'text-slate-400 hover:bg-slate-800 hover:text-white'
               }`}
             >
-              <Gamepad2 className="h-4 w-4 text-cyan-400" />
+              <Gamepad2 className="h-4 w-4 text-purple-400" />
               Game History ({games.length})
             </button>
           </div>
 
-          {/* TAB 1: WITHDRAWAL HISTORY */}
+          {/* TAB 1: DEPOSIT HISTORY */}
+          {activeTab === 'DEPOSITS' && (
+            <div>
+              {deposits.length === 0 ? (
+                <div className="py-12 text-center text-slate-500 text-xs">
+                  <ArrowDownLeft className="mx-auto h-8 w-8 text-slate-600 mb-2" />
+                  No deposit history found. Click "Deposit" in top navigation to add funds.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="border-b border-slate-800 bg-slate-950 text-slate-400">
+                      <tr>
+                        <th className="p-3">Reference / Date</th>
+                        <th className="p-3">Payment Method</th>
+                        <th className="p-3">Amount Credited</th>
+                        <th className="p-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {deposits.map((tx) => {
+                        let meta: any = {};
+                        try {
+                          meta = JSON.parse(tx.metadata || '{}');
+                        } catch {}
+
+                        return (
+                          <tr key={tx.id} className="hover:bg-slate-800/30">
+                            <td className="p-3 font-mono text-slate-300">
+                              <div className="font-bold text-emerald-300">{tx.flutterwave_ref || tx.id}</div>
+                              <div className="text-[10px] text-slate-500">{new Date(tx.created_at).toLocaleString()}</div>
+                            </td>
+                            <td className="p-3 text-slate-200 font-semibold">
+                              {tx.payment_method || 'Flutterwave Mobile Money'}
+                            </td>
+                            <td className="p-3 font-mono font-black text-emerald-400 text-sm">
+                              + RWF {Number(tx.amount).toLocaleString()}
+                            </td>
+                            <td className="p-3">
+                              {renderStatusBadge(tx.status)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: WITHDRAWAL HISTORY */}
           {activeTab === 'WITHDRAWALS' && (
             <div>
               {withdrawals.length === 0 ? (
@@ -336,7 +404,7 @@ export default function AccountPage() {
             </div>
           )}
 
-          {/* TAB 2: ALL TRANSACTIONS */}
+          {/* TAB 3: ALL TRANSACTIONS */}
           {activeTab === 'TRANSACTIONS' && (
             <div>
               {transactions.length === 0 ? (
@@ -392,7 +460,7 @@ export default function AccountPage() {
             </div>
           )}
 
-          {/* TAB 3: GAME HISTORY */}
+          {/* TAB 4: GAME HISTORY */}
           {activeTab === 'GAMES' && (
             <div>
               {games.length === 0 ? (

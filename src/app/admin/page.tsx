@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Check,
   ArrowUpRight,
+  ArrowDownLeft,
   Clock,
   CheckCircle2,
   XCircle,
@@ -26,6 +27,7 @@ import {
   Eye,
   User as UserIcon,
   X,
+  Wallet,
 } from 'lucide-react';
 import { soundManager } from '@/lib/sound';
 
@@ -33,7 +35,11 @@ export default function AdminPage() {
   const [data, setData] = useState<any>(null);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [withdrawalsList, setWithdrawalsList] = useState<any[]>([]);
+  const [depositsList, setDepositsList] = useState<any[]>([]);
+  
   const [withdrawFilter, setWithdrawFilter] = useState<'ALL' | 'PENDING' | 'COMPLETED' | 'REJECTED'>('ALL');
+  const [depositFilter, setDepositFilter] = useState<'ALL' | 'PENDING' | 'COMPLETED' | 'FAILED'>('ALL');
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -49,7 +55,7 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [adjAmount, setAdjAmount] = useState<string>('');
 
-  // User Details Modal state (for viewing withdrawal requester details)
+  // User Details Modal state
   const [viewUserDetails, setViewUserDetails] = useState<any>(null);
 
   // Rejection Modal State
@@ -90,6 +96,13 @@ export default function AdminPage() {
       const wthData = await wthRes.json();
       if (wthRes.ok) {
         setWithdrawalsList(wthData.withdrawals || []);
+      }
+
+      // Fetch deposits list
+      const depRes = await fetch('/api/admin/deposits');
+      const depData = await depRes.json();
+      if (depRes.ok) {
+        setDepositsList(depData.deposits || []);
       }
     } catch (err: any) {
       setError(err.message);
@@ -198,6 +211,37 @@ export default function AdminPage() {
     }
   };
 
+  // Handle Deposit Approval (Manual Credit) or Rejection
+  const handleDepositAction = async (transactionId: string, action: 'APPROVE' | 'REJECT', reason?: string) => {
+    soundManager.playClick();
+    setError(null);
+    setSuccessMsg(null);
+    setActionLoading(true);
+
+    try {
+      const res = await fetch('/api/admin/deposits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionId,
+          action,
+          reason,
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'Deposit action failed');
+
+      soundManager.playVictory();
+      setSuccessMsg(resData.message || 'Deposit action processed successfully!');
+      fetchAdminData();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-300">
@@ -209,7 +253,7 @@ export default function AdminPage() {
     );
   }
 
-  // Filtered withdrawals
+  // Filtered lists
   const filteredWithdrawals = withdrawalsList.filter((w) => {
     if (withdrawFilter === 'ALL') return true;
     if (withdrawFilter === 'PENDING') return w.status === 'PENDING';
@@ -218,7 +262,16 @@ export default function AdminPage() {
     return true;
   });
 
+  const filteredDeposits = depositsList.filter((d) => {
+    if (depositFilter === 'ALL') return true;
+    if (depositFilter === 'PENDING') return d.status === 'PENDING';
+    if (depositFilter === 'COMPLETED') return d.status === 'COMPLETED';
+    if (depositFilter === 'FAILED') return d.status === 'FAILED';
+    return true;
+  });
+
   const pendingWithdrawalsCount = withdrawalsList.filter((w) => w.status === 'PENDING').length;
+  const pendingDepositsCount = depositsList.filter((d) => d.status === 'PENDING').length;
 
   return (
     <main className="min-h-screen bg-slate-950 font-sans text-slate-100 pb-16">
@@ -328,7 +381,155 @@ export default function AdminPage() {
 
         </div>
 
-        {/* SECTION 1: WITHDRAWAL REQUESTS APPROVAL & REJECTION MANAGEMENT */}
+        {/* SECTION 1: DEPOSIT MANAGEMENT & HISTORY QUEUE */}
+        <div className="rounded-3xl border border-emerald-500/20 bg-slate-900/90 p-6 shadow-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div className="flex items-center gap-2">
+              <ArrowDownLeft className="h-5 w-5 text-emerald-400" />
+              <h3 className="text-base font-extrabold text-white">Player Deposit Management & Verification Queue</h3>
+              {pendingDepositsCount > 0 && (
+                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-black text-emerald-300 border border-emerald-500/30 animate-pulse">
+                  {pendingDepositsCount} Pending
+                </span>
+              )}
+            </div>
+
+            {/* Filter controls */}
+            <div className="flex items-center gap-1.5">
+              {(['ALL', 'PENDING', 'COMPLETED', 'FAILED'] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => {
+                    soundManager.playClick();
+                    setDepositFilter(filter);
+                  }}
+                  className={`rounded-xl px-3 py-1 text-xs font-bold transition ${
+                    depositFilter === filter
+                      ? 'bg-emerald-500 text-slate-950 shadow-md'
+                      : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {filteredDeposits.length === 0 ? (
+            <div className="py-12 text-center text-slate-500 text-xs">
+              No deposit records matching the selected filter ({depositFilter}).
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-slate-800 bg-slate-950 text-slate-400">
+                  <tr>
+                    <th className="p-3">Player Info</th>
+                    <th className="p-3">Deposit Amount</th>
+                    <th className="p-3">Payment Channel</th>
+                    <th className="p-3">Reference / Date</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3 text-right">Admin Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {filteredDeposits.map((d) => {
+                    let meta: any = {};
+                    try {
+                      meta = JSON.parse(d.metadata || '{}');
+                    } catch {}
+
+                    const amount = Number(d.amount || 0);
+
+                    return (
+                      <tr key={d.id} className="hover:bg-slate-800/30">
+                        <td className="p-3 font-semibold text-white">
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <div>{d.user_name || 'Player'}</div>
+                              <div className="text-[10px] text-slate-400 font-normal">{d.user_email}</div>
+                            </div>
+                            
+                            {/* Eye button for viewing user details */}
+                            <button
+                              onClick={() => {
+                                soundManager.playClick();
+                                setViewUserDetails({ ...d, meta });
+                              }}
+                              className="rounded-lg bg-slate-800 border border-slate-700/80 p-1.5 text-cyan-400 hover:bg-slate-700 hover:text-cyan-300 transition"
+                              title="View Depositor User Details"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="p-3 font-mono font-black text-emerald-400 text-sm">
+                          + RWF {amount.toLocaleString()}
+                        </td>
+                        <td className="p-3">
+                          <div className="font-bold text-slate-200">{d.payment_method || 'Flutterwave'}</div>
+                        </td>
+                        <td className="p-3 font-mono text-slate-400 text-[11px]">
+                          <div className="text-emerald-300 font-bold">{d.flutterwave_ref || d.id}</div>
+                          <div className="text-[10px] text-slate-500">{new Date(d.created_at).toLocaleString()}</div>
+                        </td>
+                        <td className="p-3">
+                          {d.status === 'COMPLETED' ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 border border-emerald-500/30">
+                              <CheckCircle2 className="h-3 w-3" />
+                              CREDITED
+                            </span>
+                          ) : d.status === 'PENDING' ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[11px] font-bold text-amber-300 border border-amber-500/30 animate-pulse">
+                              <Clock className="h-3 w-3" />
+                              PENDING
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-500/20 px-2.5 py-0.5 text-[11px] font-bold text-red-400 border border-red-500/30">
+                              <XCircle className="h-3 w-3" />
+                              FAILED
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3 text-right space-x-2">
+                          <button
+                            onClick={() => {
+                              soundManager.playClick();
+                              setViewUserDetails({ ...d, meta });
+                            }}
+                            className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-[11px] font-bold text-cyan-300 hover:bg-slate-700"
+                          >
+                            User Details
+                          </button>
+                          {d.status !== 'COMPLETED' && (
+                            <button
+                              disabled={actionLoading}
+                              onClick={() => handleDepositAction(d.id, 'APPROVE')}
+                              className="rounded bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-500 shadow-md transition disabled:opacity-50"
+                            >
+                              Verify & Credit
+                            </button>
+                          )}
+                          {d.status === 'PENDING' && (
+                            <button
+                              disabled={actionLoading}
+                              onClick={() => handleDepositAction(d.id, 'REJECT')}
+                              className="rounded bg-red-600/30 border border-red-800/60 px-2.5 py-1 text-[11px] font-bold text-red-300 hover:bg-red-600/50 transition disabled:opacity-50"
+                            >
+                              Reject Deposit
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* SECTION 2: WITHDRAWAL REQUESTS APPROVAL & REJECTION MANAGEMENT */}
         <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div className="flex items-center gap-2">
@@ -482,7 +683,7 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* SECTION 2: SYSTEM SETTINGS & REVENUE MANAGEMENT */}
+        {/* SECTION 3: SYSTEM SETTINGS & REVENUE MANAGEMENT */}
         <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl">
           <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-3">
             <Settings className="h-5 w-5 text-amber-400" />
@@ -558,7 +759,7 @@ export default function AdminPage() {
           </form>
         </div>
 
-        {/* SECTION 3: USER MANAGEMENT & WALLET CONTROLS */}
+        {/* SECTION 4: USER MANAGEMENT & WALLET CONTROLS */}
         <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl">
           <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
@@ -633,7 +834,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Modal: View Details of User Requesting Payout */}
+        {/* Modal: View Details of User */}
         {viewUserDetails && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
             <div className="w-full max-w-lg rounded-3xl border border-amber-500/30 bg-slate-900 p-6 shadow-2xl space-y-5">
@@ -643,8 +844,8 @@ export default function AdminPage() {
                     <UserIcon className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-white">Requester Player Details</h3>
-                    <p className="text-xs text-slate-400">Withdrawal Request #{viewUserDetails.flutterwave_ref || viewUserDetails.id}</p>
+                    <h3 className="text-base font-extrabold text-white">Player Details</h3>
+                    <p className="text-xs text-slate-400">Transaction #{viewUserDetails.flutterwave_ref || viewUserDetails.id}</p>
                   </div>
                 </div>
 
@@ -690,58 +891,29 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Requested Payout Specifics */}
+              {/* Transaction Details */}
               <div className="bg-slate-950/80 p-4 rounded-2xl border border-amber-500/20 space-y-2">
-                <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider">Requested Payout Details</h4>
+                <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider">Transaction Details ({viewUserDetails.type})</h4>
                 <div className="flex justify-between text-xs py-1 border-b border-slate-800">
-                  <span className="text-slate-400">Withdrawal Amount:</span>
-                  <span className="font-bold text-emerald-400 text-sm">{viewUserDetails.meta?.currency || 'RWF'} {Number(viewUserDetails.amount).toLocaleString()}</span>
+                  <span className="text-slate-400">Transaction Amount:</span>
+                  <span className="font-bold text-emerald-400 text-sm">RWF {Number(viewUserDetails.amount).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs py-1 border-b border-slate-800">
-                  <span className="text-slate-400">Payout Method:</span>
-                  <span className="font-bold text-white">{viewUserDetails.payment_method || viewUserDetails.meta?.account_bank}</span>
+                  <span className="text-slate-400">Payment Channel:</span>
+                  <span className="font-bold text-white">{viewUserDetails.payment_method || 'Flutterwave'}</span>
                 </div>
                 <div className="flex justify-between text-xs py-1 border-b border-slate-800">
-                  <span className="text-slate-400">Account / Phone Number:</span>
-                  <span className="font-mono font-bold text-amber-300">{viewUserDetails.meta?.account_number}</span>
+                  <span className="text-slate-400">Reference:</span>
+                  <span className="font-mono font-bold text-amber-300">{viewUserDetails.flutterwave_ref || viewUserDetails.id}</span>
                 </div>
-                {viewUserDetails.meta?.account_name && (
-                  <div className="flex justify-between text-xs py-1 border-b border-slate-800">
-                    <span className="text-slate-400">Account Holder Name:</span>
-                    <span className="font-bold text-white">{viewUserDetails.meta?.account_name}</span>
-                  </div>
-                )}
                 <div className="flex justify-between text-xs py-1">
                   <span className="text-slate-400">Request Timestamp:</span>
                   <span className="text-slate-300">{new Date(viewUserDetails.created_at).toLocaleString()}</span>
                 </div>
               </div>
 
-              {/* Action buttons inside modal */}
+              {/* Action buttons */}
               <div className="flex items-center justify-end gap-2 pt-2">
-                {viewUserDetails.status === 'PENDING' && (
-                  <>
-                    <button
-                      disabled={actionLoading}
-                      onClick={() => handleWithdrawalAction(viewUserDetails.id, 'APPROVE')}
-                      className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 shadow-md transition disabled:opacity-50"
-                    >
-                      Approve Payout
-                    </button>
-
-                    <button
-                      disabled={actionLoading}
-                      onClick={() => {
-                        setRejectTx(viewUserDetails);
-                        setViewUserDetails(null);
-                      }}
-                      className="rounded-xl bg-red-600/30 border border-red-800/60 px-4 py-2 text-xs font-bold text-red-300 hover:bg-red-600/50 transition"
-                    >
-                      Reject & Refund
-                    </button>
-                  </>
-                )}
-
                 <button
                   onClick={() => setViewUserDetails(null)}
                   className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
