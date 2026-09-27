@@ -14,9 +14,15 @@ export async function GET() {
     const withdrawals = await dbQuery(`
       SELECT 
         t.*, 
+        u.id as user_id,
         u.name as user_name, 
         u.email as user_email, 
-        u.wallet_balance as user_current_balance
+        u.role as user_role,
+        u.status as user_status,
+        u.wallet_balance as user_current_balance,
+        u.last_withdraw_method,
+        u.last_withdraw_account,
+        u.created_at as user_created_at
       FROM transactions t
       LEFT JOIN users u ON t.user_id = u.id
       WHERE t.type = 'WITHDRAWAL'

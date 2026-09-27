@@ -23,6 +23,9 @@ import {
   XCircle,
   Building2,
   CreditCard,
+  Eye,
+  User as UserIcon,
+  X,
 } from 'lucide-react';
 import { soundManager } from '@/lib/sound';
 
@@ -45,6 +48,9 @@ export default function AdminPage() {
   // Balance adjustment modal state
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [adjAmount, setAdjAmount] = useState<string>('');
+
+  // User Details Modal state (for viewing withdrawal requester details)
+  const [viewUserDetails, setViewUserDetails] = useState<any>(null);
 
   // Rejection Modal State
   const [rejectTx, setRejectTx] = useState<any>(null);
@@ -150,6 +156,7 @@ export default function AdminPage() {
       soundManager.playVictory();
       setSuccessMsg('User record updated!');
       setSelectedUser(null);
+      setViewUserDetails(null);
       setAdjAmount('');
       fetchAdminData();
     } catch (err: any) {
@@ -182,6 +189,7 @@ export default function AdminPage() {
       setSuccessMsg(resData.message || 'Withdrawal action processed successfully!');
       setRejectTx(null);
       setRejectReason('');
+      setViewUserDetails(null);
       fetchAdminData();
     } catch (err: any) {
       setError(err.message);
@@ -384,9 +392,25 @@ export default function AdminPage() {
                     return (
                       <tr key={w.id} className="hover:bg-slate-800/30">
                         <td className="p-3 font-semibold text-white">
-                          <div>{w.user_name || 'Player'}</div>
-                          <div className="text-[10px] text-slate-400 font-normal">{w.user_email}</div>
-                          <div className="text-[10px] text-emerald-400">Current Bal: RWF {Number(w.user_current_balance || 0).toLocaleString()}</div>
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <div>{w.user_name || 'Player'}</div>
+                              <div className="text-[10px] text-slate-400 font-normal">{w.user_email}</div>
+                              <div className="text-[10px] text-emerald-400">Current Bal: RWF {Number(w.user_current_balance || 0).toLocaleString()}</div>
+                            </div>
+                            
+                            {/* Explicit Button to view details of user who requested payout */}
+                            <button
+                              onClick={() => {
+                                soundManager.playClick();
+                                setViewUserDetails({ ...w, meta });
+                              }}
+                              className="rounded-lg bg-slate-800 border border-slate-700/80 p-1.5 text-cyan-400 hover:bg-slate-700 hover:text-cyan-300 transition"
+                              title="View Full Requester User Profile & Details"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </td>
                         <td className="p-3">
                           <div className="font-bold text-amber-300">{w.payment_method || meta.account_bank || 'Mobile Money'}</div>
@@ -419,6 +443,15 @@ export default function AdminPage() {
                           )}
                         </td>
                         <td className="p-3 text-right space-x-2">
+                          <button
+                            onClick={() => {
+                              soundManager.playClick();
+                              setViewUserDetails({ ...w, meta });
+                            }}
+                            className="rounded bg-slate-800 border border-slate-700 px-2 py-1 text-[11px] font-bold text-cyan-300 hover:bg-slate-700"
+                          >
+                            User Details
+                          </button>
                           {w.status === 'PENDING' ? (
                             <>
                               <button
@@ -599,6 +632,127 @@ export default function AdminPage() {
             </table>
           </div>
         </div>
+
+        {/* Modal: View Details of User Requesting Payout */}
+        {viewUserDetails && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
+            <div className="w-full max-w-lg rounded-3xl border border-amber-500/30 bg-slate-900 p-6 shadow-2xl space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    <UserIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-white">Requester Player Details</h3>
+                    <p className="text-xs text-slate-400">Withdrawal Request #{viewUserDetails.flutterwave_ref || viewUserDetails.id}</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setViewUserDetails(null)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* User Profile Info Grid */}
+              <div className="grid grid-cols-2 gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold">Player Name</span>
+                  <p className="text-sm font-bold text-white">{viewUserDetails.user_name || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold">Email Address</span>
+                  <p className="text-sm font-bold text-amber-300">{viewUserDetails.user_email || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold">User ID</span>
+                  <p className="text-xs font-mono text-slate-300 truncate">{viewUserDetails.user_id}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold">Account Status</span>
+                  <div>
+                    <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${
+                      viewUserDetails.user_status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {viewUserDetails.user_status || 'ACTIVE'}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold">Current Wallet Balance</span>
+                  <p className="text-sm font-black text-emerald-400">RWF {Number(viewUserDetails.user_current_balance || 0).toLocaleString()}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-bold">Saved Payout Account</span>
+                  <p className="text-xs font-bold text-amber-400">{viewUserDetails.last_withdraw_method || viewUserDetails.payment_method || 'Mobile Money'} ({viewUserDetails.last_withdraw_account || viewUserDetails.meta?.account_number || 'N/A'})</p>
+                </div>
+              </div>
+
+              {/* Requested Payout Specifics */}
+              <div className="bg-slate-950/80 p-4 rounded-2xl border border-amber-500/20 space-y-2">
+                <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider">Requested Payout Details</h4>
+                <div className="flex justify-between text-xs py-1 border-b border-slate-800">
+                  <span className="text-slate-400">Withdrawal Amount:</span>
+                  <span className="font-bold text-emerald-400 text-sm">{viewUserDetails.meta?.currency || 'RWF'} {Number(viewUserDetails.amount).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-xs py-1 border-b border-slate-800">
+                  <span className="text-slate-400">Payout Method:</span>
+                  <span className="font-bold text-white">{viewUserDetails.payment_method || viewUserDetails.meta?.account_bank}</span>
+                </div>
+                <div className="flex justify-between text-xs py-1 border-b border-slate-800">
+                  <span className="text-slate-400">Account / Phone Number:</span>
+                  <span className="font-mono font-bold text-amber-300">{viewUserDetails.meta?.account_number}</span>
+                </div>
+                {viewUserDetails.meta?.account_name && (
+                  <div className="flex justify-between text-xs py-1 border-b border-slate-800">
+                    <span className="text-slate-400">Account Holder Name:</span>
+                    <span className="font-bold text-white">{viewUserDetails.meta?.account_name}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-xs py-1">
+                  <span className="text-slate-400">Request Timestamp:</span>
+                  <span className="text-slate-300">{new Date(viewUserDetails.created_at).toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* Action buttons inside modal */}
+              <div className="flex items-center justify-end gap-2 pt-2">
+                {viewUserDetails.status === 'PENDING' && (
+                  <>
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => handleWithdrawalAction(viewUserDetails.id, 'APPROVE')}
+                      className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 shadow-md transition disabled:opacity-50"
+                    >
+                      Approve Payout
+                    </button>
+
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => {
+                        setRejectTx(viewUserDetails);
+                        setViewUserDetails(null);
+                      }}
+                      className="rounded-xl bg-red-600/30 border border-red-800/60 px-4 py-2 text-xs font-bold text-red-300 hover:bg-red-600/50 transition"
+                    >
+                      Reject & Refund
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={() => setViewUserDetails(null)}
+                  className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+                >
+                  Close
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
 
         {/* Modal: Rejection Reason Prompt */}
         {rejectTx && (

@@ -22,7 +22,6 @@ import {
   UserCheck,
   CreditCard,
 } from 'lucide-react';
-import { AppShell } from '@/components/AppShell';
 import { useUser } from '@/context/UserContext';
 import { soundManager } from '@/lib/sound';
 
@@ -43,7 +42,7 @@ export default function AccountPage() {
       }
     } catch (err) {
       console.error('Failed to load account details:', err);
-    } finally {
+    } fontinally: {
       setLoading(false);
     }
   };
@@ -60,14 +59,12 @@ export default function AccountPage() {
 
   if (authLoading || (loading && !data)) {
     return (
-      <AppShell>
-        <div className="flex min-h-[70vh] items-center justify-center">
-          <div className="flex items-center gap-3 text-slate-400">
-            <RefreshCw className="h-6 w-6 animate-spin text-amber-400" />
-            <span className="text-sm font-semibold">Loading Account & Wallet...</span>
-          </div>
+      <div className="flex min-h-[70vh] items-center justify-center bg-slate-950 text-slate-300">
+        <div className="flex items-center gap-3">
+          <RefreshCw className="h-6 w-6 animate-spin text-amber-400" />
+          <span className="text-sm font-semibold">Loading Account & Wallet...</span>
         </div>
-      </AppShell>
+      </div>
     );
   }
 
@@ -114,7 +111,7 @@ export default function AccountPage() {
   };
 
   return (
-    <AppShell>
+    <div className="min-h-screen bg-slate-950 font-sans text-slate-100 pb-16">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 space-y-6">
         
         {/* Navigation back bar */}
@@ -170,7 +167,7 @@ export default function AccountPage() {
               </div>
             </div>
 
-            {/* Wallet Balance Display & Action Buttons */}
+            {/* Wallet Balance Display */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80">
               <div>
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Wallet Balance</span>
@@ -453,6 +450,6 @@ export default function AccountPage() {
         </div>
 
       </div>
-    </AppShell>
+    </div>
   );
 }
