@@ -104,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenDeposit, onOpenWithd
                 <div className="flex items-center gap-1.5">
                   <Wallet className="h-3.5 w-3.5 text-amber-400" />
                   <span className="text-xs font-black text-emerald-400">
-                    RWF {Number(user.wallet_balance || 0).toLocaleString('en-US')}
+                    RWF {(isNaN(Number(user?.wallet_balance)) ? 0 : Number(user?.wallet_balance || 0)).toLocaleString('en-US')}
                   </span>
                 </div>
               </button>
