@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { dbQuery, dbExecute } from '@/lib/db';
+import { checkNewPlayerQualification } from '@/lib/newPlayerEngine';
 
 export async function POST(req: Request) {
   try {
@@ -27,7 +28,15 @@ export async function POST(req: Request) {
     }
 
     // Roll random die (1-6)
-    const diceRoll = Math.floor(Math.random() * 6) + 1;
+    let diceRoll = Math.floor(Math.random() * 6) + 1;
+
+    // Check if qualified new player for early turn protection
+    const qualification = await checkNewPlayerQualification(user.id, req);
+    if (qualification.isBoosted && room.current_accumulated === 0 && diceRoll === 1) {
+      // Re-roll once on first roll of turn for qualified new player to give smoother start
+      diceRoll = Math.floor(Math.random() * 5) + 2; // 2-6
+    }
+
     let newAccumulated = room.current_accumulated;
     let turnBusted = false;
     let nextTurn = 0;

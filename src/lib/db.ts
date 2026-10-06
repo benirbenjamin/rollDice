@@ -63,6 +63,7 @@ async function initDatabase() {
 
           ALTER TABLE users ADD COLUMN IF NOT EXISTS last_withdraw_method VARCHAR(50);
           ALTER TABLE users ADD COLUMN IF NOT EXISTS last_withdraw_account VARCHAR(100);
+          ALTER TABLE users ADD COLUMN IF NOT EXISTS device_fingerprint VARCHAR(255);
 
           CREATE TABLE IF NOT EXISTS otp_codes (
             id VARCHAR(64) PRIMARY KEY,
@@ -215,6 +216,7 @@ async function initDatabase() {
 
       try { await sqliteDb.exec('ALTER TABLE users ADD COLUMN last_withdraw_method TEXT;'); } catch {}
       try { await sqliteDb.exec('ALTER TABLE users ADD COLUMN last_withdraw_account TEXT;'); } catch {}
+      try { await sqliteDb.exec('ALTER TABLE users ADD COLUMN device_fingerprint TEXT;'); } catch {}
     }
   } catch (error) {
     console.error('Failed to auto-create database tables:', error);

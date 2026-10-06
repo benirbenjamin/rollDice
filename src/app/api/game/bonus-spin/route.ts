@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { dbQuery, dbExecute } from '@/lib/db';
 import { rollMultiplier } from '@/lib/multiplierEngine';
+import { checkNewPlayerQualification, rollBoostedMultiplier } from '@/lib/newPlayerEngine';
 
 export async function POST(req: Request) {
   try {
@@ -35,8 +36,20 @@ export async function POST(req: Request) {
     const totalPot = stake * 2;
     const basePayout = totalPot - (totalPot * houseRakePercent) / 100;
 
-    // Roll multiplier securely
-    const outcome = rollMultiplier();
+    // Check New Player Engagement Boost & Device Anti-Exploit Qualification
+    const qualification = await checkNewPlayerQualification(user.id, req);
+
+    let outcome: { multiplier: number; tierIndex: number; label: string };
+
+    if (qualification.isBoosted) {
+      // Qualified New Player (1st day / <= 3 deposits on fresh device):
+      // Guaranteed multiplier between 2.0x and 5.0x
+      outcome = rollBoostedMultiplier();
+    } else {
+      // Standard Wheel Roll for existing / unboosted accounts
+      outcome = rollMultiplier();
+    }
+
     const multiplier = outcome.multiplier;
     const tierIndex = outcome.tierIndex;
 
@@ -48,8 +61,6 @@ export async function POST(req: Request) {
     const finalPayout = Math.min(rawPayout, MAX_SINGLE_PAYOUT);
 
     // Difference between base payout originally credited vs new spin payout
-    // If multiplier < 1 (e.g. 0x or 0.5x), deduct difference from wallet
-    // If multiplier > 1 (e.g. 2x, 10x, 1000x), add extra difference to wallet
     const payoutDifference = finalPayout - basePayout;
 
     // Update room status to BONUS_SPIN_CLAIMED to prevent duplicate spins
@@ -71,7 +82,14 @@ export async function POST(req: Request) {
         'tx_spin_' + Date.now(),
         user.id,
         finalPayout,
-        JSON.stringify({ roomId, multiplier, basePayout, finalPayout, payoutDifference }),
+        JSON.stringify({
+          roomId,
+          multiplier,
+          basePayout,
+          finalPayout,
+          payoutDifference,
+          isBoosted: qualification.isBoosted,
+        }),
       ]
     );
 
@@ -85,6 +103,7 @@ export async function POST(req: Request) {
       basePayout,
       finalPayout,
       payoutDifference,
+      isBoosted: qualification.isBoosted,
       newBalance: Number(updatedUser[0]?.wallet_balance || 0),
     });
   } catch (error: any) {
