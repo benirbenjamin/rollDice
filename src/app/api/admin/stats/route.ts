@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { dbQuery } from '@/lib/db';
+import { calculateMaxSinglePayout } from '@/lib/newPlayerEngine';
 
 export async function GET() {
   try {
@@ -32,7 +33,10 @@ export async function GET() {
       FROM game_rooms
     `);
 
-    // 4. Transaction summaries
+    // 4. Calculate dynamic Max Single Payout ceiling based on total house income
+    const payoutCeiling = await calculateMaxSinglePayout();
+
+    // 5. Transaction summaries
     const txStats = await dbQuery(`
       SELECT 
         type, 
@@ -43,7 +47,7 @@ export async function GET() {
       GROUP BY type
     `);
 
-    // 5. Recent transactions list
+    // 6. Recent transactions list
     const recentTransactions = await dbQuery(`
       SELECT t.*, u.name as user_name, u.email as user_email
       FROM transactions t
@@ -58,6 +62,7 @@ export async function GET() {
         totalUserBalances: Number(userStats[0]?.total_user_balances || 0),
         totalGames: Number(gameStats[0]?.total_games || 0),
         totalWagerVolume: Number(gameStats[0]?.total_wager_volume || 0),
+        payoutCeiling,
         settings: Object.fromEntries(settingsMap),
       },
       txStats,

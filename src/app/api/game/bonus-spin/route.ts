@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { dbQuery, dbExecute } from '@/lib/db';
 import { rollMultiplier } from '@/lib/multiplierEngine';
-import { checkNewPlayerQualification, rollBoostedMultiplier } from '@/lib/newPlayerEngine';
+import { checkNewPlayerQualification, rollBoostedMultiplier, calculateMaxSinglePayout } from '@/lib/newPlayerEngine';
 
 export async function POST(req: Request) {
   try {
@@ -56,8 +56,11 @@ export async function POST(req: Request) {
     // Calculate dynamic final payout
     const rawPayout = basePayout * multiplier;
     
-    // House safety cap: Max 10,000 RWF per single spin to avoid draining liquidity
-    const MAX_SINGLE_PAYOUT = 10000;
+    // Dynamic House Safety Cap:
+    // Calculates total overall house income. If house income >= 10,000 FRW, max payout is between 10,000 FRW and 20% of total house income.
+    // If house income < 10,000 FRW, max payout falls back to configurable Admin setting (`min_payout_low_house`).
+    const payoutCeiling = await calculateMaxSinglePayout();
+    const MAX_SINGLE_PAYOUT = payoutCeiling.maxSinglePayout;
     const finalPayout = Math.min(rawPayout, MAX_SINGLE_PAYOUT);
 
     // Difference between base payout originally credited vs new spin payout
@@ -89,6 +92,7 @@ export async function POST(req: Request) {
           finalPayout,
           payoutDifference,
           isBoosted: qualification.isBoosted,
+          maxSinglePayout: MAX_SINGLE_PAYOUT,
         }),
       ]
     );
@@ -104,6 +108,7 @@ export async function POST(req: Request) {
       finalPayout,
       payoutDifference,
       isBoosted: qualification.isBoosted,
+      maxSinglePayout: MAX_SINGLE_PAYOUT,
       newBalance: Number(updatedUser[0]?.wallet_balance || 0),
     });
   } catch (error: any) {

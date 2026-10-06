@@ -28,6 +28,7 @@ import {
   User as UserIcon,
   X,
   Wallet,
+  Sparkles,
 } from 'lucide-react';
 import { soundManager } from '@/lib/sound';
 
@@ -50,6 +51,7 @@ export default function AdminPage() {
   const [maxStake, setMaxStake] = useState<string>('100000');
   const [minWithdraw, setMinWithdraw] = useState<string>('10');
   const [targetScore, setTargetScore] = useState<string>('100');
+  const [minPayoutLowHouse, setMinPayoutLowHouse] = useState<string>('2000');
 
   // Balance adjustment modal state
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -82,6 +84,7 @@ export default function AdminPage() {
         setMaxStake(statsData.stats.settings.max_stake || '100000');
         setMinWithdraw(statsData.stats.settings.min_withdraw || '10');
         setTargetScore(statsData.stats.settings.target_score || '100');
+        setMinPayoutLowHouse(statsData.stats.settings.min_payout_low_house || '2000');
       }
 
       // Fetch users list
@@ -132,6 +135,7 @@ export default function AdminPage() {
           max_stake: maxStake,
           min_withdraw: minWithdraw,
           target_score: targetScore,
+          min_payout_low_house: minPayoutLowHouse,
         }),
       });
 
@@ -273,6 +277,8 @@ export default function AdminPage() {
   const pendingWithdrawalsCount = withdrawalsList.filter((w) => w.status === 'PENDING').length;
   const pendingDepositsCount = depositsList.filter((d) => d.status === 'PENDING').length;
 
+  const payoutCeiling = data?.stats?.payoutCeiling || {};
+
   return (
     <main className="min-h-screen bg-slate-950 font-sans text-slate-100 pb-16">
       
@@ -337,18 +343,22 @@ export default function AdminPage() {
             <p className="mt-1 text-[11px] text-slate-500">Net platform earnings retained</p>
           </div>
 
-          {/* Card 2: Total Wager Volume */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-xl">
+          {/* Card 2: Dynamic Max Payout Cap Card */}
+          <div className="rounded-2xl border border-emerald-500/30 bg-slate-900/90 p-5 shadow-xl">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400">Total Wager Volume</span>
+              <span className="text-xs font-bold text-emerald-300">Live Dynamic Max Spin Payout</span>
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
-                <DollarSign className="h-5 w-5" />
+                <Sparkles className="h-5 w-5" />
               </div>
             </div>
             <div className="mt-3 text-2xl font-extrabold text-emerald-400">
-              RWF {Number(data?.stats?.totalWagerVolume || 0).toLocaleString()}
+              RWF {Number(payoutCeiling.maxSinglePayout || 10000).toLocaleString()}
             </div>
-            <p className="mt-1 text-[11px] text-slate-500">Cumulative player stakes</p>
+            <p className="mt-1 text-[11px] text-slate-400">
+              {payoutCeiling.isLowHouseBalance
+                ? `Low House Fallback (< 10k FRW House)`
+                : `20% of RWF ${Number(payoutCeiling.totalHouseIncome || 0).toLocaleString()} Total House Income`}
+            </p>
           </div>
 
           {/* Card 3: Pending Withdrawals Alert Card */}
@@ -684,13 +694,24 @@ export default function AdminPage() {
         </div>
 
         {/* SECTION 3: SYSTEM SETTINGS & REVENUE MANAGEMENT */}
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl">
-          <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-3">
-            <Settings className="h-5 w-5 text-amber-400" />
-            <h3 className="text-base font-extrabold text-white">Dynamic Platform Configurations</h3>
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-amber-400" />
+              <h3 className="text-base font-extrabold text-white">Dynamic Platform Configurations</h3>
+            </div>
+
+            {/* Dynamic Payout Metric Badge */}
+            <div className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-300">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+              <span>
+                Live Max Spin Payout: RWF {Number(payoutCeiling.maxSinglePayout || 10000).toLocaleString()}{' '}
+                {payoutCeiling.isLowHouseBalance ? `(Low House Fallback)` : `(20% of RWF ${Number(payoutCeiling.totalHouseIncome || 0).toLocaleString()} Total House Income)`}
+              </span>
+            </div>
           </div>
 
-          <form onSubmit={handleSaveSettings} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+          <form onSubmit={handleSaveSettings} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">House Rake % (Edge)</label>
               <input
@@ -748,7 +769,18 @@ export default function AdminPage() {
               />
             </div>
 
-            <div className="sm:col-span-2 md:col-span-5 flex justify-end">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Max Payout (House &lt; 10k)</label>
+              <input
+                type="number"
+                min="100"
+                value={minPayoutLowHouse}
+                onChange={(e) => setMinPayoutLowHouse(e.target.value)}
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-sm font-bold text-cyan-400 focus:border-cyan-400 focus:outline-none"
+              />
+            </div>
+
+            <div className="sm:col-span-2 md:col-span-3 lg:col-span-6 flex justify-end">
               <button
                 type="submit"
                 className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-2.5 text-xs font-bold text-slate-950 shadow-md shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500 transition"

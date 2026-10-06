@@ -135,3 +135,62 @@ export function rollBoostedMultiplier(): { multiplier: number; tierIndex: number
     return { multiplier: 5.0, tierIndex: 6, label: '5.0x 💎' };
   }
 }
+
+/**
+ * Calculates the dynamic MAX_SINGLE_PAYOUT ceiling for bonus spins based on total house income.
+ * 
+ * Rules:
+ * 1. Total house income = max(total rake collected from games, house_balance setting).
+ * 2. If total house income >= 10,000 FRW:
+ *    maxSinglePayout = Math.max(10000, totalHouseIncome * 0.20)
+ *    (i.e. From 10,000 FRW up to 20% of total overall house income).
+ * 3. If total house income < 10,000 FRW:
+ *    maxSinglePayout = Configured Admin Fallback setting (`min_payout_low_house`), defaulting to 2,000 FRW.
+ */
+export async function calculateMaxSinglePayout(): Promise<{
+  maxSinglePayout: number;
+  totalHouseIncome: number;
+  isLowHouseBalance: boolean;
+  configuredLowHousePayout: number;
+}> {
+  try {
+    const houseRakeRows = await dbQuery(
+      `SELECT SUM(rake_amount) as total_rake FROM game_rooms WHERE status = 'COMPLETED' OR status = 'BONUS_SPIN_CLAIMED'`
+    );
+    const houseSettingRows = await dbQuery(
+      `SELECT key, value FROM system_settings WHERE key IN ('house_balance', 'min_payout_low_house')`
+    );
+
+    const settingsMap = new Map(houseSettingRows.map((s) => [s.key, s.value]));
+    const totalRakeCollected = Number(houseRakeRows[0]?.total_rake || 0);
+    const houseBalanceSetting = Number(settingsMap.get('house_balance') || 0);
+    const configuredLowHousePayout = Number(settingsMap.get('min_payout_low_house') || 2000);
+
+    const totalHouseIncome = Math.max(totalRakeCollected, houseBalanceSetting);
+
+    let maxSinglePayout = 10000;
+    let isLowHouseBalance = false;
+
+    if (totalHouseIncome >= 10000) {
+      maxSinglePayout = Math.max(10000, totalHouseIncome * 0.20);
+    } else {
+      isLowHouseBalance = true;
+      maxSinglePayout = configuredLowHousePayout;
+    }
+
+    return {
+      maxSinglePayout: Math.round(maxSinglePayout),
+      totalHouseIncome: Math.round(totalHouseIncome),
+      isLowHouseBalance,
+      configuredLowHousePayout,
+    };
+  } catch (error) {
+    console.error('Error calculating dynamic max single payout:', error);
+    return {
+      maxSinglePayout: 10000,
+      totalHouseIncome: 0,
+      isLowHouseBalance: true,
+      configuredLowHousePayout: 2000,
+    };
+  }
+}
